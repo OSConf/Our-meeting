@@ -6,7 +6,7 @@
 
   - __Product Owner__: Gabar Ewen
   - __Scrum Master__: Gabar Ewen
-  - __Development Team Members__: Huy Pham
+  - __Development Team Members__: Huy Pham, Justin Cruz
 
 ## Table of Contents
 
