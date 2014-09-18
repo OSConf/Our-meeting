@@ -1,0 +1,16 @@
+{
+  "name": "Our-meeting",
+  "version": "0.0.0",
+  "homepage": "https://github.com/OSConf/Our-meeting",
+  "authors": [
+    "Gabar Ewen <gewen87@gmail.com>"
+  ],
+  "description": "Conferencing plugin app",
+  "main": "index.html",
+  "keywords": [
+    "conference",
+    "meeting"
+  ],
+  "license": "MIT",
+  "private": true
+}
