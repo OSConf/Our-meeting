@@ -21,7 +21,10 @@
   },
   "homepage": "https://github.com/OSConf/Our-meeting",
   "dependencies": {
+    "chai": "^1.9.1",
     "express": "^4.9.3",
+    "grunt": "^0.4.5",
+    "mocha": "^1.21.4",
     "socket.io": "^1.1.0"
   }
 }
