@@ -1,0 +1,27 @@
+{
+  "name": "Our-meeting",
+  "version": "1.0.0",
+  "description": "Web conferencing app",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OSConf/Our-meeting"
+  },
+  "keywords": [
+    "\"conference\""
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OSConf/Our-meeting/issues"
+  },
+  "homepage": "https://github.com/OSConf/Our-meeting",
+  "dependencies": {
+    "express": "^4.9.3",
+    "socket.io": "^1.1.0"
+  }
+}

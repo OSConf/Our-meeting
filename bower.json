@@ -12,5 +12,8 @@
     "meeting"
   ],
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "angular": "~1.2.25"
+  }
 }
