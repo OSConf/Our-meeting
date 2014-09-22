@@ -5,11 +5,15 @@ function WebRTC(error_handler){
 	var me = { stream: null, id:null };
 	var rtc = {};
 	var users = [];
+  var constraint = {
+    audio:true,
+    video:true
+  };
 	var s = {
 		streams:{},
 		videoStreams:{},
 		audioStreams:{},
-		dataStreams:{}		
+		dataStreams:{}
 	};
 
 	try{

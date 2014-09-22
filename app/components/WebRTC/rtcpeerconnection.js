@@ -53,10 +53,10 @@ function RTC(WebRTC, Signaller, error_handler){
 
 		peer.onicecandidate = function(event){
     	if (event.candidate) {
-        Signaller.send('ice', wrapData(event.candidate));
+        signaller.send('ice', wrapData(event.candidate));
       }
     };
-		
+
     peer.offer = function(){
     	this.createOffer(function(description){
     		peer.setLocalDescription(description, function(){
