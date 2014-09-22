@@ -1,19 +1,20 @@
 //Define socket.io handlers here
 module.exports = function(server){
   var io = require('socket.io')(server);
+  var _ = require('lodash');
 
   //our meeting manager object
-  var meetingManager = function(){
+  var MeetingManager = function(){
     this.meetings = {};
     this.users = {};
   };
 
-  meetingManager.prototype.addMeeting = function(data){
+  MeetingManager.prototype.addMeeting = function(data){
     var id = data.id;
     this.meetings[id] = data;
   };
 
-  meetingManager.prototype.getMeeting = function(id){
+  MeetingManager.prototype.getMeeting = function(id){
     //if id is not passed in, return all meetings
     if(id===undefined){
       return Object.keys(this.meetings);
@@ -28,16 +29,42 @@ module.exports = function(server){
     }
   };
 
-  var manager = new meetingManager();
+  MeetingManager.prototype.addUser = function(socket){
+    this.users[socket.id] = socket;
+  };
 
-  io.on('connect', function(socket){
+  MeetingManager.prototype.getUser = function(){
+    return _.map(this.users, function(value){
+      return value.username;
+    });
+  };
+
+
+
+  var manager = new MeetingManager();
+
+  io.on('connection', function(socket){
     console.log('Received new socket connection');
-  });
 
+    //when user join, client will emit "user ready"
+    socket.on('user-ready', function(data) {
+      socket.username = data.username;
+      manager.addUser(socket);
+    });
+
+    //listen for when user disconnect so we can remove them from our users object
+    socket.on('disconnect', function(){
+      console.log('user disconnected');
+      var user = manager.users[socket.id];
+      socket.emit('user-disconnected', { username: user });
+      delete manager.users[socket.id];
+    });
+
+  });
 
   var managerSpace = io.of('/manager');
 
-  managerSpace.on('connect', function(socket){
+  managerSpace.on('connection', function(socket){
     
     socket.on('add', function(data){
       try {
@@ -57,8 +84,11 @@ module.exports = function(server){
       }
     });
 
-  });
+    socket.on('get-user', function(){
+      socket.emit('user', manager.getUser() );
+    });
 
+  });
 
   return io;
 };
