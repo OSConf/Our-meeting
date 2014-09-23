@@ -30,13 +30,19 @@ module.exports = function(server){
   };
 
   MeetingManager.prototype.addUser = function(socket){
-    this.users[socket.id] = socket;
+    this.users[socket.username] = socket;
   };
 
-  MeetingManager.prototype.getUser = function(){
-    return _.map(this.users, function(value){
-      return value.username;
-    });
+  MeetingManager.prototype.getUser = function(username){
+    if(username===undefined){
+      return Object.keys(this.users);
+    } else {
+      if(!this.users[username]){
+
+      } else {
+        return this.users[username];
+      }
+    }
   };
 
 
@@ -86,6 +92,12 @@ module.exports = function(server){
 
     socket.on('get-user', function(){
       socket.emit('user', manager.getUser() );
+    });
+
+    socket.on('signal', function(evt, data){
+      var user = data.to;
+      var to = manager.getUser(user);
+      to.emit('signal', evt, data);
     });
 
   });
