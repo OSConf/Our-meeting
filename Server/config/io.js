@@ -1,79 +1,41 @@
 //Define socket.io handlers here
 module.exports = function(server){
   var io = require('socket.io')(server);
-  var _ = require('lodash');
+  var MeetingManger = require('./meetingmanager');
+  var manager = new MeetingManger();
 
-  //our meeting manager object
-  var MeetingManager = function(){
-    this.meetings = {};
-    this.users = {};
-  };
-
-  MeetingManager.prototype.addMeeting = function(data){
-    var id = data.id;
-    this.meetings[id] = data;
-  };
-
-  MeetingManager.prototype.getMeeting = function(id){
-    //if id is not passed in, return all meetings
-    if(id===undefined){
-      return Object.keys(this.meetings);
-    } else {
-      //if meeting does not exist, throw error
-      if(!this.meetings[id]){
-        throw Error("Meeting not found");
-      } else {
-        //return the meeting
-        return this.meetings[id];
-      }
-    }
-  };
-
-  MeetingManager.prototype.addUser = function(socket){
-    this.users[socket.username] = socket;
-  };
-
-  MeetingManager.prototype.getUser = function(username){
-    if(username===undefined){
-      return Object.keys(this.users);
-    } else {
-      if(!this.users[username]){
-
-      } else {
-        return this.users[username];
-      }
-    }
-  };
-
-
-
-  var manager = new MeetingManager();
-
+  //on connection...
   io.on('connection', function(socket){
     console.log('Received new socket connection');
 
-    //when user join, client will emit "user ready"
+    //when user join, client will emit "user ready" and send data with username
     socket.on('user-ready', function(data) {
+      //adding username property onto the socket
       socket.username = data.username;
+      //adding the user to our meeting manager object
       manager.addUser(socket);
     });
 
     //listen for when user disconnect so we can remove them from our users object
+    //this still needs work!!!
     socket.on('disconnect', function(){
       console.log('user disconnected');
-      var user = manager.users[socket.id];
-      socket.emit('user-disconnected', { username: user });
-      delete manager.users[socket.id];
+      socket.emit('user-disconnected', { username: socket.username });
+      delete manager.users[socket.username];
     });
 
   });
 
+  //creating our manager name space
   var managerSpace = io.of('/manager');
 
+  //manager space on connection...
   managerSpace.on('connection', function(socket){
     
+    //when client emits add
     socket.on('add', function(data){
       try {
+        //it will add a meeting to the meeting manager
         manager.addMeeting(data);
         socket.emit('success');
       } catch(e) {
@@ -81,8 +43,10 @@ module.exports = function(server){
       }
     });
 
+    //when client emits get, client send over nothing or meeting name/id
     socket.on('get', function(id){
-      try{
+      try {
+        //it will get all meetings or specific meetings from the meeting manager
         socket.emit('meeting', manager.getMeeting(id) );
         socket.emit('success');
       } catch(e) {
@@ -90,14 +54,26 @@ module.exports = function(server){
       }
     });
 
-    socket.on('get-user', function(){
-      socket.emit('user', manager.getUser() );
+    //when client emits get-user, client when send over nothing or username
+    socket.on('get-user', function(username){
+      try {
+        //it will get all users or specific user's referenced socket
+        socket.emit('user', manager.getUser(username) );
+        socket.emit('success');
+      } catch(e) {
+        socket.emit('err', e.message);
+      }
     });
 
+    //when client emits signal, it will send over evt(event) and data
     socket.on('signal', function(evt, data){
-      var user = data.to;
-      var to = manager.getUser(user);
-      to.emit('signal', evt, data);
+      try {
+        var user = data.to;
+        var to = manager.getUser(user);
+        to.emit('signal', evt, data);
+      } catch(e) {
+        socket.emit('err', e.message);
+      }
     });
 
   });
