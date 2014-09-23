@@ -5,12 +5,19 @@ function RTC(WebRTC, Signaller){
 		try {
 			var peer = WebRTC.getRTC(data.from);
 			if(evt === 'offer'){
-				peer.onOffer(data.description);
+        console.log(data);
+				peer.onOffer(data.data);
 			} else if(evt === 'answer'){
-				peer.onAnswer(data.description);
+				peer.onAnswer(data.data);
 			} else if(evt === 'ice'){
-				peer.queueIce(data.candidate);
-			} else {
+				peer.queueIce(data.data);
+			} else if(evt === 'ready'){
+        console.log('received ready');
+        if(peer.ready){
+          console.log('sending offer');
+          peer.offer();
+        }
+      } else {
 				throw new Error('Unknown signal ' + evt);
 			}
 		} catch(e) {
@@ -23,7 +30,10 @@ function RTC(WebRTC, Signaller){
 		var peer = new RTCPeerConnection({'iceServers':[{'urls':'stun:stun.iptel.org'}]});
 
 		//Must have local stream attached before doing anything
-		peer.addStream(WebRTC.getMyInfo().stream);
+    var myStream = WebRTC.getMyInfo().stream;
+    if(myStream){
+		  peer.addStream(myStream);
+    }
 
 		//Must have local description before sending offer or answer
 		peer.hasLocalDescription = function(){
@@ -40,7 +50,7 @@ function RTC(WebRTC, Signaller){
 		};
 
 		//Process ice candidates when ready
-		function processIce(){
+		peer.processIce = function(){
 			if(peer.hasLocalDescription() && peer.hasRemoteDescription){
 				ice.forEach(function(candidate){
 					peer.addIceCandidate(new RTCIceCandidate(candidate));
@@ -48,7 +58,7 @@ function RTC(WebRTC, Signaller){
 			}
 		}
 		peer.onaddstream = function(stream){
-			WebRTC.addStream(user, stream);
+			WebRTC.addStream(user, stream.stream);
 		};
 
 		peer.onicecandidate = function(event){
@@ -69,7 +79,6 @@ function RTC(WebRTC, Signaller){
     	this.createAnswer(function(description){
     		peer.setLocalDescription(description, function(){
     			Signaller.send('answer', wrapData(description));
-    			processIce();
     		}, console.log);
     	},console.log);
     };
@@ -77,7 +86,6 @@ function RTC(WebRTC, Signaller){
     peer.onAnswer = function(description){
     	try{
     		this.setRemoteDescription(new RTCSessionDescription(description), function(){
-    			processIce();
     		}, console.log);
     	} catch(e){
     		console.log(e);
@@ -85,8 +93,9 @@ function RTC(WebRTC, Signaller){
     };
 
     peer.onOffer = function(description){
+      console.log('rec descr', description);
 			try{
-        pc.setRemoteDescription(new RTCSessionDescription(description), function(success){
+        peer.setRemoteDescription(new RTCSessionDescription(description), function(success){
           peer.answer();
         }, console.log);
       } catch(e){
@@ -104,6 +113,9 @@ function RTC(WebRTC, Signaller){
 			};
 		}
 
+    //When both sides are ready, signalling begins
+    peer.ready = false;
+
 		return peer;
 	}
 
@@ -111,5 +123,6 @@ function RTC(WebRTC, Signaller){
 			WebRTC.setRTC(user, createRTC(user));
 			return WebRTC.getUserInfo(user);
 	};
+
 	return rtc;
 }

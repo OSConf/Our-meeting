@@ -42,19 +42,19 @@ function WebRTC(){
 
 	//Stream has all associated streams, video/audio/datachannel
 	webrtc.getStream = function(user){
-		return get(user, streams);
+		return get(user, 'streams');
 	};
 
 	webrtc.getVideoStream = function(user){
-		return get(user, videoStreams);
+		return get(user, 'videoStreams');
 	};
 
 	webrtc.getAudioStream = function(user){
-		return get(user, audioStreams);
+		return get(user, 'audioStreams');
 	};
 
 	webrtc.getDataStream = function(user){
-		return get(user, dataStreams);
+		return get(user, 'dataStreams');
 	};
 
 	webrtc.getRTC = function(user){
@@ -67,6 +67,7 @@ function WebRTC(){
 
 	webrtc.addStream = function(user, stream){
 		try {
+			console.log(stream, 'STREAM!!!');
 			s.streams[user] = stream;
 			s.videoStreams[user] = stream.getVideoTracks();
 			s.audioStreams[user] = stream.getAudioTracks();
@@ -92,12 +93,13 @@ function WebRTC(){
 		return userInfo;
 	};
 
+	webrtc.setId = function(id){
+		me.id = id;
+	};
+
 	webrtc.getMyInfo = function(){
 		return me;
 	};
 	return webrtc;
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> transfering to different pc testing webrtc lib
