@@ -100,6 +100,6 @@ function WebRTC(){
 	webrtc.getMyInfo = function(){
 		return me;
 	};
+	webrtc.users = users;
 	return webrtc;
 }
-

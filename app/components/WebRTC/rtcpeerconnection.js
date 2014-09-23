@@ -56,7 +56,8 @@ function RTC(WebRTC, Signaller){
 					peer.addIceCandidate(new RTCIceCandidate(candidate));
 				});
 			}
-		}
+		};
+    
 		peer.onaddstream = function(stream){
 			WebRTC.addStream(user, stream.stream);
 		};

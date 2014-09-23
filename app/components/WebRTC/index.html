@@ -1,18 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <style type="text/css">
+  .users {
+    float: left;
+  }
+
+  .users li {
+    height: 100px;
+    width: 100px;
+  }
+  </style>
 </head>
-<body>
+<body ng-app="ourMeeting">
+  <div ng-controller="ourMeetingCtrl">
+    <om-meeting></om-meeting>
+  </div>
+<!--
+<div class="meeting">
+  <div id="meeting-space" style="width:400px; height:800px; overflow-y:auto;"></div>
+  <video id="me" autoplay style="float:left;"></video>
+</div> -->
 
-<video id="me" autoplay></video>
-<video id="other" autoplay></video>
 
-<script src="adapter.js"></script>
-<script src="webrtc.js"></script>
-<script src="rtcpeerconnection.js"></script>
+<script src="WebRTC/adapter.js"></script>
+<script src="WebRTC/webrtc.js"></script>
+<script src="WebRTC/rtcpeerconnection.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="signalling.js"></script>
-<script src="logic.js"></script>
+<script src="WebRTC/signalling.js"></script>
+<script src="WebRTC/logic.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular.min.js"></script>
+<script type="text/javascript" src="../client/scripts/directives.js"></script>
+
+
 
 </body>
 </html>

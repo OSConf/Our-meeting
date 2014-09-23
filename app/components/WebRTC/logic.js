@@ -1,7 +1,7 @@
 var client = io({url:'http://localhost'});
 var webrtc = WebRTC();
 var signaller = Signaller();
-var rtc = RTC(webrtc, signaller);
+var RTC = RTC(webrtc, signaller);
 
 var user = Math.floor(Math.random()*100);
 webrtc.setId(user);
@@ -27,14 +27,14 @@ socket.on('users', function(data){
 
 function addNew(user){
   webrtc.addUser(user);
-  rtc.newPeer(user);
+  RTC.newPeer(user);
   checkIfReady(user);
 }
 checkConnections();
 
 //Checks all rtc connections to see if they are up and ready
 //for signalling, checks all users every 30 seconds
-function checkConnections(){
+function checkConnections() {
   var users = webrtc.getAllUsers();
   console.log(users);
   users.forEach(function(username){
@@ -53,10 +53,6 @@ function checkIfReady(user){
     var localStream = webrtc.getMyInfo().stream;
     console.log('Checking', user);
     if( localStream !== null){
-      var vid = document.getElementById('me');
-      if(vid.src.length < 1){
-        attachMediaStream(vid, localStream);
-      }
       //Check if rtc connection has a local stream attached
       if(peer.getLocalStreams().length < 1){
         peer.addStream(localStream);
@@ -101,5 +97,5 @@ function createVidElements(user){
 }
 
 function getAllUserNames(){
-  return webrtc.users;
+  return webrtc.getAllUsers();
 }

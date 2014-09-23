@@ -138,6 +138,10 @@ if (navigator.mozGetUserMedia) {
     console.log('stream', stream);
     stream = stream.stream ? stream.stream: stream;
     console.log('element', element);
+    if (stream === null || element === null) {
+      return false;
+    }
+
     if (typeof element.srcObject !== 'undefined') {
       element.srcObject = stream;
     } else if (typeof element.mozSrcObject !== 'undefined') {
@@ -146,6 +150,7 @@ if (navigator.mozGetUserMedia) {
       element.src = URL.createObjectURL(stream);
     } else {
       console.log('Error attaching stream to element.');
+      return false;
     }
   };
 
