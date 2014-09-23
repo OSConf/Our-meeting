@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/osconf/our-meeting.png?label=ready&title=Ready)](https://waffle.io/osconf/our-meeting)
 # Our-Meeting
 
 > A web conferencing platform that makes collaboration and integration easy 
