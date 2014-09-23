@@ -20,17 +20,22 @@
   },
   "homepage": "https://github.com/OSConf/Our-meeting",
   "dependencies": {
-    "chai": "^1.9.1",
     "express": "^4.9.3",
+    "lodash": "^2.4.1",
+    "socket.io": "^1.1.0"
+  },
+  "devDependencies": {
     "grunt": "^0.4.5",
     "grunt-contrib-concat": "^0.5.0",
+    "chai": "^1.9.1",
     "grunt-contrib-jshint": "^0.10.0",
     "grunt-contrib-qunit": "^0.5.2",
+    "mocha": "^1.21.4",
     "grunt-contrib-uglify": "^0.6.0",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-mocha-test": "^0.12.0",
-    "lodash": "^2.4.1",
-    "mocha": "^1.21.4",
-    "socket.io": "^1.1.0"
+    "grunt-concurrent": "^1.0.0",
+    "grunt-node-inspector": "^0.1.5",
+    "grunt-nodemon": "^0.3.0"
   }
 }
