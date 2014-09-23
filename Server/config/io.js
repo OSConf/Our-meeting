@@ -6,23 +6,6 @@ module.exports = function(server){
 
   //on connection...
   io.on('connection', function(socket){
-    console.log('Received new socket connection');
-
-    //when user join, client will emit "user ready" and send data with username
-    socket.on('user-ready', function(data) {
-      //adding username property onto the socket
-      socket.username = data.username;
-      //adding the user to our meeting manager object
-      manager.addUser(socket);
-    });
-
-    //listen for when user disconnect so we can remove them from our users object
-    //this still needs work!!!
-    socket.on('disconnect', function(){
-      console.log('user disconnected');
-      socket.emit('user-disconnected', { username: socket.username });
-      delete manager.users[socket.username];
-    });
 
   });
 
@@ -31,7 +14,42 @@ module.exports = function(server){
 
   //manager space on connection...
   managerSpace.on('connection', function(socket){
-    
+    console.log('Received new socket connection');
+
+    //when user join, client will emit "user ready" and send data with username
+    socket.on('user-ready', function(data) {
+      //adding username property onto the socket
+      username = data.username;
+      
+      //send participant info to user
+      var users = manager.getUser();
+      socket.emit('users', users);
+
+      //adding the user to our meeting manager object
+      manager.addUser(username, socket);
+
+
+      //send userinfo to each participant
+      var ids = Object.keys(manager.socketIds);
+      for(var i = 0; i < ids.length; i++){
+        socket.broadcast.to(ids[i]).emit('new-user', {username:username});
+      }
+    });
+
+    //listen for when user disconnect so we can remove them from our users object
+    //this still needs work!!!
+    socket.on('disconnect', function(){
+      console.log('user disconnected');
+      try {
+        var username = manager.getBySocketId(socket.id);
+        socket.emit('user-disconnected', { username: username });
+        delete manager.users[username];
+        delete manager.socketIds[socket.id];
+      } catch(e) {
+        console.log(e.message);
+      }
+    });
+    console.log('user in /manager', socket.id);
     //when client emits add
     socket.on('add', function(data){
       try {
@@ -67,8 +85,10 @@ module.exports = function(server){
 
     //when client emits signal, it will send over evt(event) and data
     socket.on('signal', function(evt, data){
+      console.log('in signal');
       try {
         var user = data.to;
+        console.log(evt);
         var to = manager.getUser(user);
         to.emit('signal', evt, data);
       } catch(e) {

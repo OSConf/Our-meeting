@@ -1,29 +1,34 @@
 //User a function to make this easily adaptable to angular
 
-function WebRTC(error_handler){
+function WebRTC(){
 	var webrtc = {};
 	var me = { stream: null, id:null };
 	var rtc = {};
 	var users = [];
+  var constraint = {
+    audio:true,
+    video:true
+  };
 	var s = {
 		streams:{},
 		videoStreams:{},
 		audioStreams:{},
-		dataStreams:{}		
+		dataStreams:{}
 	};
 
 	try{
 		myMedia();
 	} catch(e){
-		error_handler(e);
+		console.log(e);
 	}
 
 	//Gets own media stream, and appends onto the dom
   function myMedia(){
-    getUserMedia(contraint, function(stream){
-      myStream.stream = stream;
+    //sdspter.js
+    getUserMedia(constraint, function(stream){
+      me.stream = stream;
     }, function(err){
-      error_handler(e);
+      console.log(e);
     });
   }
 
@@ -37,19 +42,19 @@ function WebRTC(error_handler){
 
 	//Stream has all associated streams, video/audio/datachannel
 	webrtc.getStream = function(user){
-		return get(user, streams);
+		return get(user, 'streams');
 	};
 
 	webrtc.getVideoStream = function(user){
-		return get(user, videoStreams);
+		return get(user, 'videoStreams');
 	};
 
 	webrtc.getAudioStream = function(user){
-		return get(user, audioStreams);
+		return get(user, 'audioStreams');
 	};
 
 	webrtc.getDataStream = function(user){
-		return get(user, dataStreams);
+		return get(user, 'dataStreams');
 	};
 
 	webrtc.getRTC = function(user){
@@ -62,11 +67,12 @@ function WebRTC(error_handler){
 
 	webrtc.addStream = function(user, stream){
 		try {
+			console.log(stream, 'STREAM!!!');
 			s.streams[user] = stream;
 			s.videoStreams[user] = stream.getVideoTracks();
 			s.audioStreams[user] = stream.getAudioTracks();
 		} catch(e){
-			error_handler(e);
+			console.log(e);
 		}
 	};
 
@@ -87,8 +93,13 @@ function WebRTC(error_handler){
 		return userInfo;
 	};
 
+	webrtc.setId = function(id){
+		me.id = id;
+	};
+
 	webrtc.getMyInfo = function(){
 		return me;
 	};
 	return webrtc;
 }
+

@@ -27,6 +27,9 @@ describe('Server Component Specs', function(){
 							});
 						} else {
 							completed++;
+              if(completed === items.length){
+                    done();
+              }
 						}
 					});
 				}
