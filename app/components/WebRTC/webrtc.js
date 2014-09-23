@@ -1,6 +1,6 @@
 //User a function to make this easily adaptable to angular
 
-function WebRTC(error_handler){
+function WebRTC(){
 	var webrtc = {};
 	var me = { stream: null, id:null };
 	var rtc = {};
@@ -19,15 +19,16 @@ function WebRTC(error_handler){
 	try{
 		myMedia();
 	} catch(e){
-		error_handler(e);
+		console.log(e);
 	}
 
 	//Gets own media stream, and appends onto the dom
   function myMedia(){
-    getUserMedia(contraint, function(stream){
-      myStream.stream = stream;
+    //sdspter.js
+    getUserMedia(constraint, function(stream){
+      me.stream = stream;
     }, function(err){
-      error_handler(e);
+      console.log(e);
     });
   }
 
@@ -70,7 +71,7 @@ function WebRTC(error_handler){
 			s.videoStreams[user] = stream.getVideoTracks();
 			s.audioStreams[user] = stream.getAudioTracks();
 		} catch(e){
-			error_handler(e);
+			console.log(e);
 		}
 	};
 
@@ -96,3 +97,7 @@ function WebRTC(error_handler){
 	};
 	return webrtc;
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> transfering to different pc testing webrtc lib

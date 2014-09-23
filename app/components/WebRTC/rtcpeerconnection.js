@@ -1,4 +1,4 @@
-function RTC(WebRTC, Signaller, error_handler){
+function RTC(WebRTC, Signaller){
 	var rtc = {};
 
 	Signaller.on('signal', function(evt, data){
@@ -14,7 +14,7 @@ function RTC(WebRTC, Signaller, error_handler){
 				throw new Error('Unknown signal ' + evt);
 			}
 		} catch(e) {
-			error_handler(e);
+			console.log(e);
 		}
 	});
 
@@ -61,8 +61,8 @@ function RTC(WebRTC, Signaller, error_handler){
     	this.createOffer(function(description){
     		peer.setLocalDescription(description, function(){
     			Signaller.send('offer', wrapData(description));
-    		}, error_handler);
-    	}, error_handler);
+    		}, console.log);
+    	}, console.log);
     };
 
     peer.answer = function(){
@@ -70,17 +70,17 @@ function RTC(WebRTC, Signaller, error_handler){
     		peer.setLocalDescription(description, function(){
     			Signaller.send('answer', wrapData(description));
     			processIce();
-    		}, error_handler);
-    	},error_handler);
+    		}, console.log);
+    	},console.log);
     };
 
     peer.onAnswer = function(description){
     	try{
     		this.setRemoteDescription(new RTCSessionDescription(description), function(){
     			processIce();
-    		}, error_handler);
+    		}, console.log);
     	} catch(e){
-    		error_handler(e);
+    		console.log(e);
     	}
     };
 
@@ -88,9 +88,9 @@ function RTC(WebRTC, Signaller, error_handler){
 			try{
         pc.setRemoteDescription(new RTCSessionDescription(description), function(success){
           peer.answer();
-        }, error_handler);
+        }, console.log);
       } catch(e){
-        error_handler(e);
+        console.log(e);
       }
     };
 
