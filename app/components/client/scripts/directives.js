@@ -9,7 +9,10 @@ angular.module('ourMeeting', [])
     var userCheck = $interval(function() {
       $scope.meeting.users = webrtc.users;
       
-      $scope.meeting.users.forEach(function (id) {
+      $scope.meeting.users.forEach(function (id, index) {
+        if (index === 0) {
+          $scope.attachToWhiteboard(id);
+        }
         $scope.attachVideos(id);
       });
     }, 5000);
@@ -18,17 +21,29 @@ angular.module('ourMeeting', [])
     //$scope.meeting.users.push(webrtc.getMyInfo().id);
     $scope.meeting.videos = {};
 
-    $scope.attachVideos = function(id){
-      console.log('dis is da ID:' + id);
+    $scope.attachVideos = function(id) {
       if($scope.meeting.videos[id] === undefined) {
-        var stream = webrtc.getRTC(id).getRemoteStreams()[0];
-        if(stream !== undefined || stream !== null){
+        var stream = webrtc.getUserInfo(id).stream;
+        if(stream !== undefined || stream !== null) {
           
-          var src = createVidElements(stream);
-          $scope.meeting.videos[id] = src;
+          $scope.meeting.videos[id] = stream;
           var parent = document.getElementById(id);
-          if (attachMediaStream(parent, webrtc.getUserInfo(id).stream) === false) {
+          if (attachMediaStream(parent, stream) === false) {
             $scope.meeting.videos[id] = undefined;
+          }
+        }
+      }
+    };
+
+    $scope.attachToWhiteboard = function (id) {
+      if($scope.meeting.videos.whiteboard === undefined) {
+        var stream = webrtc.getUserInfo(id).stream;
+        if(stream !== undefined || stream !== null) {
+          
+          $scope.meeting.videos.whiteboard = stream;
+          var parent = document.getElementById('whiteboard');
+          if (attachMediaStream(parent, stream) === false) {
+            $scope.meeting.videos.whiteboard = undefined;
           }
         }
       }
@@ -50,7 +65,7 @@ angular.module('ourMeeting', [])
   .directive('omWhiteboard', function() {
     return {
       restrict: 'E',
-      template: '<div id="whiteboard"></div>'
+      template: '<div id="whiteboard-div"><video id="whiteboard" autoplay></div>'
     };
   })
   .directive('omUsers', function() {
