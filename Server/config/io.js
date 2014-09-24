@@ -20,15 +20,11 @@ module.exports = function(server){
     socket.on('user-ready', function(data) {
       //adding username property onto the socket
       username = data.username;
-      
       //send participant info to user
       var users = manager.getUser();
       socket.emit('users', users);
-
       //adding the user to our meeting manager object
       manager.addUser(username, socket);
-
-
       //send userinfo to each participant
       var ids = Object.keys(manager.socketIds);
       for(var i = 0; i < ids.length; i++){
@@ -77,6 +73,26 @@ module.exports = function(server){
       try {
         //it will get all users or specific user's referenced socket
         socket.emit('user', manager.getUser(username) );
+        socket.emit('success');
+      } catch(e) {
+        socket.emit('err', e.message);
+      }
+    });
+
+    socket.on('invite-user', function(meetingID, usernames){
+      try {
+        //it will get all users or specific user's referenced socket
+        manager.addUserToMeeting(meetingID, usernames);
+        socket.emit('success');
+      } catch(e) {
+        socket.emit('err', e.message);
+      }
+    });
+
+    socket.on('check-invite', function(username){
+      try {
+        //it will get all users or specific user's referenced socket
+        socket.emit('test', manager.checkInvite(username) );
         socket.emit('success');
       } catch(e) {
         socket.emit('err', e.message);
