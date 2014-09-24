@@ -11,12 +11,6 @@ function RTC(WebRTC, Signaller){
 				peer.onAnswer(data.data);
 			} else if(evt === 'ice'){
 				peer.queueIce(data.data);
-			} else if(evt === 'ready'){
-        console.log('received ready');
-        if(peer.ready){
-          console.log('sending offer');
-          peer.offer();
-        }
       } else {
 				throw new Error('Unknown signal ' + evt);
 			}

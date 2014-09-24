@@ -15,19 +15,31 @@ socket.on('connect', function(){
 
 socket.on('new-user', function(data){
   console.log('received new peer');
-  addNew(data.username);
+  addNew('new-user', data.username);
 });
 
 socket.on('users', function(data){
   console.log(data);
   data.forEach(function(user){
-    addNew(user);
+    addNew('users', user);
   });
 });
 
-function addNew(user){
+function addNew(evt, user){
+
+  //Add user to userlist
   webrtc.addUser(user);
+
+  //create RTCPeerConnection for user
   RTC.newPeer(user);
+
+  //Prepare for handshake 
+  var peer = webrtc.getRTC(user);
+  peer.Status = evt === 'new-user' ? 'waiting': 'ready';
+
+  //timeout for how long to wait before reattempting connection
+  var timeout = 3000;
+  handshake(peer, timeout);
   checkIfReady(user);
 }
 checkConnections();
@@ -98,4 +110,50 @@ function createVidElements(user){
 
 function getAllUserNames(){
   return webrtc.getAllUsers();
+}
+
+function handshake(peer, timeout){
+  signaller.on('handshake', function(evt, data){
+    if(peer.Status === undefined){
+      signaller.emit('cancel');
+    }
+
+    if(evt === 'ack'){
+      if((peer.Status === 'waiting' || peer.Status === 'blocked') && 
+        data.Status === 'waitForAck'){
+        
+        //When receiving, the connection will wait for an offer
+        peer.Status = 'receiving';
+        signaller.handshake('ack', {Status:peer.Status});
+
+      } else if(peer.Status === 'waitForAck' && 
+        data.Status === 'receiving'){
+
+        //The other side is ready to receive offer
+        peer.offer();
+      
+      } else if(peer.Status === 'waitForAck' &&
+        data.Status === 'waitForAck'){
+
+        //block for timeout
+        peer.Status = Math.floor(Math.random()*10) % 2 ? 'block':peer.Status;
+        //If both are at set to waitForAck, reset the connection
+        signaller.handshake('reset', {Status:peer.Status});
+
+        setTimeout(function(){
+          peer.Status = 'waiting';
+        }, timeout);
+      }
+    } else if(evt === 'reset'){
+      if(peer.Status === 'waitForAck'){
+        signaller.handshake('ack', {Socket:peer.Status});
+      } else if(peer.Status === 'waitForAck' && 
+        data.Status === 'waitForAck'){
+
+        //Reverse positions if other end is still waitForAck
+        peer.Status = 'receiving';
+        signaller.handshake('ack', {Status:peer.Status});
+      }
+    }
+  });
 }

@@ -1,4 +1,5 @@
 angular.module('ourMeeting', [])
+
   .controller('ourMeetingCtrl', ['$scope', '$timeout', '$interval', function($scope, $timeout, $interval) {
     $scope.meeting = {
       users: []
@@ -16,11 +17,12 @@ angular.module('ourMeeting', [])
 
     $scope.meeting.videos = {};
 
+
     $scope.attachVideos = function(id) {
+
       if($scope.meeting.videos[id] === undefined) {
         var user = webrtc.getUserInfo(id);
         if(user !== undefined || user !== null) {
-          
           $scope.meeting.videos[id] = user;
           var parent = document.getElementById(id);
           if (attachMediaStream(parent, user.stream) === false) {

@@ -137,6 +137,18 @@ module.exports = function(server){
       }
     });
 
+    socket.on('handshake', function(evt, data){
+      console.log('in signal', evt);
+      try {
+        var user = data.to;
+        console.log(evt);
+        var to = manager.getUser(user);
+        to.emit('handshake', evt, data);
+      } catch(e) {
+        socket.emit('err', e.message);
+      }
+    });
+
   });
   return io;
 };

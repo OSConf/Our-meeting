@@ -12,6 +12,9 @@ function Signaller(){
 		},
 		on: function(evt, callback){
 			socket.on(evt, callback);
-		}
+		},
+    handshake: function(evt, data){
+      socket.emit('handshake', evt, data);
+    }
 	};
 }
