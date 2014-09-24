@@ -1,16 +1,22 @@
-
+var _ = require('lodash');
 
 var MeetingManager = function(){
   //holds our meetings and users
   this.meetings = {};
   this.users = {};
   this.socketIds = {};
+  this.invitees = {};
+};
+
+var Meeting = function(id){
+  this.id = id;
+  this.meetUsers = [];
+  this.meetInvitees = [];
 };
 
 //ability to add meetings
-MeetingManager.prototype.addMeeting = function(data){
-  var id = data.id;
-  this.meetings[id] = data;
+MeetingManager.prototype.addMeeting = function(id){
+  this.meetings[id] = new Meeting(id);
 };
 
 //ability to get all meetings or just one specific meeting
@@ -61,6 +67,25 @@ MeetingManager.prototype.getBySocketId = function(id){
     } else {
       return this.socketIds[id];
     }
+  }
+};
+
+//takes in meeting and an array of users  ex. usernames = ["john", "tom"]
+MeetingManager.prototype.addUserToMeeting = function(meetingID, usernames){
+  this.meetings[meetingID].meetInvitees = _.union(this.meetings[meetingID].meetInvitees, usernames);
+
+  for(var i = 0; i < usernames.length; i++){
+    var curUserRoom = this.invitees[usernames[i]] || [];
+    if(curUserRoom.indexOf(meetingID) === -1){
+      curUserRoom.push(meetingID);
+    }
+    this.invitees[usernames[i]] = curUserRoom;
+  }
+};
+
+MeetingManager.prototype.checkInvite = function(username){
+  if(this.invitees[username] !== undefined){
+    return this.invitees[username];
   }
 };
 
