@@ -126,10 +126,8 @@ module.exports = function(server){
 
     //when client emits signal, it will send over evt(event) and data
     socket.on('signal', function(evt, data){
-      console.log('in signal');
       try {
         var user = data.to;
-        console.log(evt);
         var to = manager.getUser(user);
         to.emit('signal', evt, data);
       } catch(e) {

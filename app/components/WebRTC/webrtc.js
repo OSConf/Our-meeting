@@ -28,7 +28,7 @@ function WebRTC(){
     getUserMedia(constraint, function(stream){
       me.stream = stream;
     }, function(err){
-      console.log(e);
+      console.log(err);
     });
   }
 

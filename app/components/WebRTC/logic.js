@@ -74,19 +74,23 @@ function checkIfReady(user){
       if(peer.getRemoteStreams().length < 1){
         console.log('send req for remote');
         
-        //Let peer know we are ready to begin signalling
-        signaller.send('ready', {
-          from: webrtc.getMyInfo().id,
-          to:user,
-        });
-        peer.ready = true;
+        //If the peers status is connected, but has no remote streams,
+        //Then it must no longer be connected
+        if(peer.Status === 'waiting' || peer.Status === 'connected'){
+          peer.Status = 'waitForAck';
+          signaller.handshake('ack', {Status:peer.Status});
+        }
+
         setTimeout(function(){
-          if(user !== undefined || user !== null){
+          if((user !== undefined || user !== null) && 
+            peer.Status !== 'waiting' || peer.Status !== 'block'){
+            peer.Status = 'waiting';
             checkIfReady(user);
           }
         }, 15000);
       } else {
         peer.processIce();
+        peer.Status = 'connected';
         return;
       }
       //Mark this peer as ready to begin signalling
@@ -116,6 +120,7 @@ function handshake(peer, timeout){
   signaller.on('handshake', function(evt, data){
     if(peer.Status === undefined){
       signaller.emit('cancel');
+      return;
     }
 
     if(evt === 'ack'){
@@ -154,6 +159,8 @@ function handshake(peer, timeout){
         peer.Status = 'receiving';
         signaller.handshake('ack', {Status:peer.Status});
       }
+    } else if(evt === 'cancel'){
+      peer.Status = 'waiting';
     }
   });
 }
