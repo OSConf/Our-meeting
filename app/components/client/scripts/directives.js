@@ -9,7 +9,7 @@ angular.module('ourMeeting', [])
     var userCheck = $interval(function() {
       $scope.meeting.users = webrtc.users;
       
-      $scope.meeting.users.forEach(function (id) {
+      $scope.meeting.users.forEach(function (id, index) {
         $scope.attachVideos(id);
       });
     }, 5000);
@@ -18,20 +18,24 @@ angular.module('ourMeeting', [])
     //$scope.meeting.users.push(webrtc.getMyInfo().id);
     $scope.meeting.videos = {};
 
-    $scope.attachVideos = function(id){
-      console.log('dis is da ID:' + id);
+    $scope.attachVideos = function(id) {
       if($scope.meeting.videos[id] === undefined) {
-        var stream = webrtc.getRTC(id).getRemoteStreams()[0];
-        if(stream !== undefined || stream !== null){
+        var user = webrtc.getUserInfo(id);
+        if(user !== undefined || user !== null) {
           
-          var src = createVidElements(stream);
-          $scope.meeting.videos[id] = src;
+          $scope.meeting.videos[id] = user;
           var parent = document.getElementById(id);
-          if (attachMediaStream(parent, webrtc.getUserInfo(id).stream) === false) {
+          if (attachMediaStream(parent, user.stream) === false) {
             $scope.meeting.videos[id] = undefined;
           }
         }
       }
+    };
+
+    $scope.attachToWhiteboard = function (id) {
+      var video = document.getElementById(id).cloneNode(true);
+      document.getElementById('whiteboard').innerHTML = '';
+      document.getElementById('whiteboard').appendChild(video);
     };
 
 
@@ -56,7 +60,7 @@ angular.module('ourMeeting', [])
   .directive('omUsers', function() {
     return {
       restrict: 'E',
-      template: '<ul class="users"><li ng-repeat="user in meeting.users"><video id="{{user}}" autoplay></li></ul>',
+      template: '<ul class="users"><li ng-click="attachToWhiteboard(user)" ng-repeat="user in meeting.users"><video id="{{user}}" autoplay></li></ul>',
     };
   })
   .directive('omChat', function() {
