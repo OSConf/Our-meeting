@@ -3,6 +3,10 @@ var server = require('http').createServer(app);
 var io = require('./config/io')(server);
 var config = require('./config/config');
 
+server.on('error', function(err){
+  console.log('ERROR', err);
+});
+
 module.exports = {
   listen: function(){
   	server.listen(config.port, function(){

@@ -5,6 +5,21 @@ var reattachMediaStream = null;
 var webrtcDetectedBrowser = null;
 var webrtcDetectedVersion = null;
 
+
+var toSrcElem = function(stream){
+  var element = document.createElement('source');
+  if (typeof element.srcObject !== 'undefined') {
+    element.srcObject = stream;
+  } else if (typeof element.mozSrcObject !== 'undefined') {
+    element.mozSrcObject = stream;
+  } else if (typeof element.src !== 'undefined') {
+    element.src = URL.createObjectURL(stream);
+  } else {
+    console.log('Error attaching stream to element.');
+  }
+  return element;
+};
+
 function trace(text) {
   // This function is used for logging.
   if (text[text.length - 1] === '\n') {
@@ -123,6 +138,10 @@ if (navigator.mozGetUserMedia) {
     console.log('stream', stream);
     stream = stream.stream ? stream.stream: stream;
     console.log('element', element);
+    if (stream === null || element === null) {
+      return false;
+    }
+
     if (typeof element.srcObject !== 'undefined') {
       element.srcObject = stream;
     } else if (typeof element.mozSrcObject !== 'undefined') {
@@ -131,6 +150,7 @@ if (navigator.mozGetUserMedia) {
       element.src = URL.createObjectURL(stream);
     } else {
       console.log('Error attaching stream to element.');
+      return false;
     }
   };
 

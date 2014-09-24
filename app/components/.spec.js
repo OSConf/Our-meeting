@@ -28,6 +28,9 @@ describe('Client Component Specs', function(){
 							});
 						} else {
 							completed++;
+              if(completed === items.length){
+                done();
+              }
 						}
 					});
 				}
@@ -36,3 +39,4 @@ describe('Client Component Specs', function(){
 
 	});
 });
+
