@@ -1,5 +1,4 @@
 angular.module('ourMeeting', [])
-
   .controller('ourMeetingCtrl', ['$scope', '$timeout', '$interval', function($scope, $timeout, $interval) {
     $scope.meeting = {
       users: []

@@ -6,11 +6,17 @@ function RTC(WebRTC, Signaller){
 			var peer = WebRTC.getRTC(data.from);
 			if(evt === 'offer'){
         console.log(data);
-				peer.onOffer(data.data);
+        peer.checkForStream(function(){
+				  peer.onOffer(data.data);
+        });
 			} else if(evt === 'answer'){
-				peer.onAnswer(data.data);
+        peer.checkForStream(function(){
+				  peer.onAnswer(data.data);
+        });
 			} else if(evt === 'ice'){
 				peer.queueIce(data.data);
+      } else if(evt === 'ready'){
+        peer.processIce();
       } else {
 				throw new Error('Unknown signal ' + evt);
 			}
@@ -24,10 +30,17 @@ function RTC(WebRTC, Signaller){
 		var peer = new RTCPeerConnection({'iceServers':[{'urls':'stun:stun.iptel.org'}]});
 
 		//Must have local stream attached before doing anything
-    var myStream = WebRTC.getMyInfo().stream;
-    if(myStream){
-		  peer.addStream(myStream);
-    }
+    peer.checkForStream = function(success){
+      var myStream = WebRTC.getMyInfo().stream;
+      if(myStream){
+  		  peer.addStream(myStream);
+        success();
+      } else {
+        setTimeout(function(){
+          peer.checkForStream(success);
+        }, 3000);
+      }
+    };
 
 		//Must have local description before sending offer or answer
 		peer.hasLocalDescription = function(){
@@ -46,10 +59,15 @@ function RTC(WebRTC, Signaller){
 		//Process ice candidates when ready
 		peer.processIce = function(){
 			if(peer.hasLocalDescription() && peer.hasRemoteDescription){
-				ice.forEach(function(candidate){
+				ice.forEach(function(candidate, i, arr){
 					peer.addIceCandidate(new RTCIceCandidate(candidate));
+          arr.splice(i,1);
 				});
-			}
+			} else {
+        setTimeout(function(){
+          peer.processIce();
+        }, 2000);
+      }
 		};
     
 		peer.onaddstream = function(stream){
@@ -74,13 +92,16 @@ function RTC(WebRTC, Signaller){
     	this.createAnswer(function(description){
     		peer.setLocalDescription(description, function(){
     			Signaller.send('answer', wrapData(description));
+          peer.processIce();
     		}, console.log);
     	},console.log);
     };
 
     peer.onAnswer = function(description){
+      if(description.type === 'offer') return;
     	try{
     		this.setRemoteDescription(new RTCSessionDescription(description), function(){
+          peer.processIce();
     		}, console.log);
     	} catch(e){
     		console.log(e);
@@ -88,6 +109,7 @@ function RTC(WebRTC, Signaller){
     };
 
     peer.onOffer = function(description){
+      if(description.type === 'answer') return;
       console.log('rec descr', description);
 			try{
         peer.setRemoteDescription(new RTCSessionDescription(description), function(success){

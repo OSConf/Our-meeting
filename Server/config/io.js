@@ -136,7 +136,7 @@ module.exports = function(server){
     });
 
     socket.on('handshake', function(evt, data){
-      console.log('in signal', evt);
+      console.log('handshake', evt, data.Status, data.from);
       try {
         var user = data.to;
         console.log(evt);
