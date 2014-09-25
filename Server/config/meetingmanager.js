@@ -35,6 +35,22 @@ MeetingManager.prototype.getMeeting = function(id){
   }
 };
 
+//when a user joins a meeting, they will be added to the meeting user list
+MeetingManager.prototype.joinMeeting = function(meetingID, socketID){
+  var username = this.socketIds[socketID];
+  this.meetings[meetingID].meetUsers = _.union(this.meetings[meetingID].meetUsers, [username]);
+};
+
+//ability to grab current active user list for the meeting
+MeetingManager.prototype.getMeetingList = function(meetingID){
+  return this.meetings[meetingID].meetUsers;
+};
+
+//ability to grab current active user list for the meeting
+MeetingManager.prototype.alertMeetingList = function(usernames){
+  return this.meetings[meetingID].meetUsers;
+};
+
 //ability to add a user with a reference to the socket
 MeetingManager.prototype.addUser = function(username, socket){
   this.users[username] = socket;
@@ -74,15 +90,26 @@ MeetingManager.prototype.getBySocketId = function(id){
 MeetingManager.prototype.addUserToMeeting = function(meetingID, usernames){
   this.meetings[meetingID].meetInvitees = _.union(this.meetings[meetingID].meetInvitees, usernames);
 
-  for(var i = 0; i < usernames.length; i++){
-    var curUserRoom = this.invitees[usernames[i]] || [];
+  var that = this.invitees;
+  _.each(usernames, function(user){
+    var curUserRoom = that[user] || [];
     if(curUserRoom.indexOf(meetingID) === -1){
       curUserRoom.push(meetingID);
     }
-    this.invitees[usernames[i]] = curUserRoom;
-  }
+    that[user] = curUserRoom;
+  });
 };
 
+//alert user who were already online, but was invited during that time
+MeetingManager.prototype.alertInvite = function(usernames){
+  var that = this;
+  _.each(usernames, function(user){
+    var userSocket = that.getUser(user);
+    userSocket.emit('inviteList', that.checkInvite(user) );
+  });
+};
+
+//check invite for user when they first join
 MeetingManager.prototype.checkInvite = function(username){
   if(this.invitees[username] !== undefined){
     return this.invitees[username];

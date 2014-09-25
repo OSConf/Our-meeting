@@ -79,21 +79,46 @@ module.exports = function(server){
       }
     });
 
+    //when a client emits this, they can add users to a meeting
+    //takes in meetingID and usernames( ex. ["john", "sally"] )
     socket.on('invite-user', function(meetingID, usernames){
       try {
-        //it will get all users or specific user's referenced socket
+        //add users to meeting and invite list
         manager.addUserToMeeting(meetingID, usernames);
+        //alert the those who are invited
+        manager.alertInvite(usernames);
         socket.emit('success');
       } catch(e) {
         socket.emit('err', e.message);
       }
     });
 
+    //check's if a user is invited to any meeting
     socket.on('check-invite', function(username){
       try {
-        //it will get all users or specific user's referenced socket
-        socket.emit('test', manager.checkInvite(username) );
+        socket.emit('inviteList', manager.checkInvite(username) );
         socket.emit('success');
+      } catch(e) {
+        socket.emit('err', e.message);
+      }
+    });
+
+    //when client emits join, they will join the room
+    socket.on('join', function(meetingID){
+      try {
+        //check if meeting exist, throws error if not found
+        var meeting = manager.getMeeting(meetingID);
+        //if meeting exist then the client will join the room
+        if(meeting){
+          //joining the meeting
+          socket.join(meetingID);
+          //adding user to the active user list for the meeting
+          manager.joinMeeting(meetingID, socket.id);
+          //grab active user list for this meeting and send to all users in room
+          var meetingList = manager.getMeetingList(meetingID);
+          managerSpace.to(meetingID).emit('roomList', meetingList);
+          socket.emit('success');
+        }
       } catch(e) {
         socket.emit('err', e.message);
       }
@@ -113,6 +138,5 @@ module.exports = function(server){
     });
 
   });
-
   return io;
 };
