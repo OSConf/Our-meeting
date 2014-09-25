@@ -7,7 +7,7 @@ angular.module('ourMeeting', [])
     */};
 
     var userCheck = $interval(function() {
-      $scope.meeting.users = webrtc.users;
+      $scope.meeting.users = webrtc.getAllUsers();
       
       $scope.meeting.users.forEach(function (id, index) {
         $scope.attachVideos(id);
@@ -16,14 +16,15 @@ angular.module('ourMeeting', [])
 
     $scope.meeting.videos = {};
 
+
     $scope.attachVideos = function(id) {
+
       if($scope.meeting.videos[id] === undefined) {
-        var user = webrtc.getUserInfo(id);
-        if(user !== undefined || user !== null) {
-          
-          $scope.meeting.videos[id] = user;
+        var stream = webrtc.getStream(id);
+        if(stream !== undefined && stream !== null) {
+          $scope.meeting.videos[id] = stream;
           var parent = document.getElementById(id);
-          if (attachMediaStream(parent, user.stream) === false) {
+          if (attachMediaStream(parent, stream) === false) {
             $scope.meeting.videos[id] = undefined;
           }
         }
