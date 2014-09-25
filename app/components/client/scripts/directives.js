@@ -14,8 +14,6 @@ angular.module('ourMeeting', [])
       });
     }, 5000);
 
-    
-    //$scope.meeting.users.push(webrtc.getMyInfo().id);
     $scope.meeting.videos = {};
 
     $scope.attachVideos = function(id) {
@@ -33,11 +31,24 @@ angular.module('ourMeeting', [])
     };
 
     $scope.attachToWhiteboard = function (id) {
-      var video = document.getElementById(id).cloneNode(true);
-      document.getElementById('whiteboard').innerHTML = '';
-      document.getElementById('whiteboard').appendChild(video);
+      var whiteboard = document.getElementById('whiteboard');
+      if (whiteboard.childNodes.length > 0) {
+        var old_video = whiteboard.childNodes[0];
+        var elem = document.getElementsByClassName(old_video.id)[0];
+        elem.appendChild(old_video);
+        elem.childNodes[0].play();
+      }
+
+      var video = document.getElementById(id);
+      whiteboard.innerHTML = '';
+      whiteboard.appendChild(video);
+      whiteboard.childNodes[0].play();
     };
 
+    $scope.$on('new-user', function(data) {
+      var log = data || 'heya';
+      console.log(log);
+    });
 
     $scope.$on('$destroy', function() {
       $interval.cancel(userCheck);
@@ -60,7 +71,7 @@ angular.module('ourMeeting', [])
   .directive('omUsers', function() {
     return {
       restrict: 'E',
-      template: '<ul class="users"><li ng-click="attachToWhiteboard(user)" ng-repeat="user in meeting.users"><video id="{{user}}" autoplay></li></ul>',
+      template: '<ul class="users"><li class="{{user}}" ng-click="attachToWhiteboard(user)" ng-repeat="user in meeting.users"><video id="{{user}}" autoplay></li></ul>',
     };
   })
   .directive('omChat', function() {
