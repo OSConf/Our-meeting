@@ -2,14 +2,19 @@ var client = io({url:'http://localhost'});
 var webrtc = WebRTC();
 var signaller = Signaller();
 var RTC = RTC(webrtc, signaller);
-var OMscope;
+
 //timeout for how long to wait before reattempting connection
 var timeout = 3000;
 
 //Max communication retries before blocking 
 var maxRetries = 10;
 
+//handshake manager
+var sync = signaller.hs(timeout, signaller);
+console.log(sync);
+
 var store = sessionStorage.getItem('om-uid');
+
 if(store === undefined || store === null){
   store = Math.floor(Math.random()*100);
   sessionStorage.setItem('om-uid', store);
@@ -33,7 +38,7 @@ socket.on('users', function(data){
   console.log(data);
 
   //performs negotiations to begin transferring description info
-  handshake(timeout);
+  //handshake(timeout);
   
   data.forEach(function(user){
     addNew('users', user);
@@ -43,18 +48,29 @@ socket.on('users', function(data){
 function addNew(evt, user){
 
   //Add user to userlist
-  webrtc.addUser(user);
+  if(webrtc.getUser(user) === undefined){
+    webrtc.addUser(user);
+  }
 
   //create RTCPeerConnection for user
   RTC.newPeer(user);
 
   //Prepare for handshake 
   var peer = webrtc.getRTC(user);
+
+  //add peer to handshake man
+  sync.addPeer(user, peer);
+
   if(evt === 'new-user'){
-    peer.Status = 'receiving'; 
+    peer.Status = 'receive'; 
   } else {
-    peer.Status = 'waitForAck';
-    signaller.handshake('ack', address(user, peer.Status));
+    peer.Status = 'sender';
+    signaller.handshake('ack', signaller.address(
+      user,
+      webrtc.getMyInfo().id, {
+        Status:peer.Status
+      }
+    ));
   }
   peer.Retry = 0;
 
@@ -73,14 +89,13 @@ function checkConnections() {
   users.forEach(function(username){
     var peer = webrtc.getRTC(username);
 
-    if(peer.Status === 'waiting' ||
-      peer.Status === 'connected'){
+    if(peer.Status === 'waiting'){
       checkIfReady(username);
-      }
+    }
   });
   setTimeout(function(){
     checkConnections();
-  },30000);
+  },60000);
 }
 
 //Checks if an rtc stream has an attached local stream object, 
@@ -103,30 +118,23 @@ function checkIfReady(user){
       //Check if rtc connection does not have a remote stream attached
       if(peer.getRemoteStreams().length < 1){
         console.log(peer.Status);
-        
-        //If the peers status is connected, but has no remote streams,
-        //Then it must no longer be connected
-        if(peer.Status !== 'waitForAck' || peer.Status !== 'receiving'){
-          peer.Status = 'waitForAck';
-          signaller.handshake('ack', address(user, peer.Status));
-        }
+        peer.Retry++;
+        //If the peers status is synced, but has no remote streams,
+        //Then it must no longer be synced
+        signaller.handshake('ack', signaller.address(
+          user,
+          webrtc.getMyInfo().id, {
+            Status:peer.Status
+          }
+        ));
 
         setTimeout(function(){
           if((user !== undefined || user !== null)){
-            console.log(peer.Status, 'Waiting on ', user);
-            console.log('All users are', webrtc.getAllUsers());
-
-            peer.Retry++;
-            if(peer.Retry < maxRetries){
-              checkIfReady(user);
-            } else {
-              peer.Status = 'block';
-              peer.Retry = 0;
-            }
+            checkIfReady(user);
           }
-        }, 10000);
+        }, 15000);
       } else {
-        peer.Status = 'connected';
+        peer.Status = 'synced';
         console.log(peer.Status);
         return;
       }
@@ -158,49 +166,4 @@ function address(user, status){
     to:user,
     Status:status
   };
-}
-function handshake(timeout){
-  signaller.on('handshake', function(evt, data){
-    console.log('evt recv', data.Status, data.from);
-    var user = data.from;
-    var peer = webrtc.getRTC(user);
-    console.log('my status', peer.Status);
-    if(peer.Status === undefined){
-      signaller.emit('cancel', address(user, undefined));
-      return;
-    }
-
-    if(evt === 'ack'){
-      if((peer.Status === 'waiting' || peer.Status === 'blocked' || peer.Status === 'ready') && 
-        data.Status === 'waitForAck'){
-        
-        //When receiving, the connection will wait for an offer
-        peer.Status = 'receiving';
-        signaller.handshake('ack', address(user, peer.Status));
-
-      } else if(peer.Status === 'waitForAck' && 
-        data.Status === 'receiving'){
-
-        //The other side is ready to receive offer
-        peer.checkForStream(function(){
-          peer.offer();
-        });
-      
-      } else if(peer.Status === 'waitForAck' &&
-        data.Status === 'waitForAck'){
-
-        //block for timeout
-        var priority = signaller.priority(data);
-        var reply = 'ack';
-        if(priority > 0){
-          peer.Status = 'receiving';
-        }
-
-        //If both are same priority, reset the connection
-        signaller.handshake('ack', address(user, peer.Status));
-      }
-    } else if(evt === 'cancel'){
-      peer.Status = 'waiting';
-    }
-  });
 }

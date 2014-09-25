@@ -4,7 +4,7 @@ function WebRTC(){
 	var webrtc = {};
 	var me = { stream: null, id:null };
 	var rtc = {};
-	var users = [];
+	var users = {};
   var constraint = {
     audio:true,
     video:true
@@ -77,11 +77,15 @@ function WebRTC(){
 	};
 
 	webrtc.addUser = function(user){
-		users.push(user);
+		users[user] = true;
+	};
+
+	webrtc.getUser = function(user){
+		return users[user];
 	};
 
 	webrtc.getAllUsers = function(){
-		return users;
+		return Object.keys(users);
 	};
 
 	webrtc.getUserInfo = function(user){
