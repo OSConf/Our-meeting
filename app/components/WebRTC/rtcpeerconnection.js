@@ -28,7 +28,7 @@ function RTC(WebRTC, Signaller){
 	function createRTC(user){
 		var ice = [];
 		var peer = new RTCPeerConnection({'iceServers':[{'urls':'stun:stun.iptel.org'}]});
-
+    peer.chat = peer.createDataChannel('om-chat');
 		//Must have local stream attached before doing anything
     peer.checkForStream = function(success){
       var myStream = WebRTC.getMyInfo().stream;

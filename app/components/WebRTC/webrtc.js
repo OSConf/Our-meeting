@@ -9,6 +9,7 @@ function WebRTC(){
     audio:true,
     video:true
   };
+  var chats = [];
 	var s = {
 		streams:{},
 		videoStreams:{},
@@ -54,17 +55,31 @@ function WebRTC(){
 	};
 
 	webrtc.getDataStream = function(user){
-		return get(user, 'dataStreams');
+		return webrtc.getRTC(user).chat;
 	};
 
 	webrtc.getRTC = function(user){
 		return rtc[user];
 	};
+	webrtc.getUserChat = function(user){
+		return webrtc.getDataStream(user);
+	};
+	webrtc.getChats = function(){
+		var messages = chats.slice();
+		chats = [];
+		return messages;
+	};
+	webrtc.sendChat = function(message){
+		var users = Object.keys(s.dataStreams);
+		users.forEach(function(user){
+			webrtc.getUserChat(user).send(message);
+		});
+	};
 
 	webrtc.setRTC = function(user, peerConnection){
 		rtc[user] = peerConnection;
+		var chat = ChatSetup(user, peerConnection.chat, chats);
 	};
-
 	webrtc.addStream = function(user, stream){
 		try {
 			console.log(stream, 'STREAM!!!');
