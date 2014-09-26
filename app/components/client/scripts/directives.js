@@ -2,9 +2,7 @@ angular.module('ourMeeting', [])
   .controller('ourMeetingCtrl', ['$scope', '$timeout', '$interval', function($scope, $timeout, $interval) {
     $scope.meeting = {
       users: []
-      /*[{name: 'justin'}, {name: 'gabs'}, {name: 'huy'}, {name: 'shawn'}],
-      chat: [{name: 'pig', message: 'HELLO EVERYONE!'}, {name: 'cat', message: 'Hey'}, {name: 'pig2', message: 'why do you have to yell'}, {name: 'pig', message: 'sry'}]
-    */};
+    };
 
     var userCheck = $interval(function() {
       $scope.meeting.users = webrtc.getAllUsers();

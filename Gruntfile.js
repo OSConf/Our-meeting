@@ -69,7 +69,28 @@ module.exports = function(grunt){
           logConcurrentOutput: true
         }
       }
-    }
+    },
+
+    uglify: {
+      options: {
+        mangle: false
+      },
+      my_target: {
+        files: {
+          'app/api/om.min.js': ['app/api/om.concat.js']
+        }
+      }
+    },
+
+    concat: {
+      options: {
+        separator: '',
+      },
+      dist: {
+        src: ['app/components/WebRTC/webrtc.js', 'app/components/WebRTC/signalling.js', 'app/components/WebRTC/rtcpeerconnection.js', 'app/api/front-end.js', 'app/components/client/scripts/directives.js'],
+        dest: 'app/api/om.concat.js',
+      },
+    },
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -79,7 +100,10 @@ module.exports = function(grunt){
   grunt.loadNpmTasks('grunt-node-inspector');
   grunt.loadNpmTasks('grunt-nodemon');
   grunt.loadNpmTasks('grunt-concurrent');
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
 
   grunt.registerTask('test', ['jshint', 'mochaTest','watch']);
   grunt.registerTask('serve', ['concurrent']);
+  grunt.registerTask('build', ['concat', 'uglify']);
 };
