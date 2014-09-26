@@ -1,4 +1,4 @@
-var ourMeeting = (function() {
+(function(obj) {
   // Load webrtc here
   var webrtc = (function() {})();
 
@@ -6,7 +6,7 @@ var ourMeeting = (function() {
 
   var User = function() {};
 
-  var om = function() {
+  obj.ourMeeting = function() {
     /* Statics */
   };
 
@@ -64,7 +64,4 @@ var ourMeeting = (function() {
 
     }
   };
-
-
-  return om;
-})();
+})(window);
