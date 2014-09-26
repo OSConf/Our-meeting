@@ -1,5 +1,5 @@
 var client = io({url:'http://localhost'});
-var webrtc = WebRTC();
+var webrtc = ourMeeting.webrtc();
 var signaller = Signaller();
 var RTC = RTC(webrtc, signaller);
 

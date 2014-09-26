@@ -1,5 +1,5 @@
 //User a function to make this easily adaptable to angular
-
+(function(window){
 function WebRTC(){
 	var webrtc = {};
 	var me = { stream: null, id:null };
@@ -122,3 +122,10 @@ function WebRTC(){
 	webrtc.users = users;
 	return webrtc;
 }
+
+if(window.ourMeeting === undefined){
+	window.ourMeeting = {};
+}
+
+window.ourMeeting.webrtc = WebRTC;
+})(window);
