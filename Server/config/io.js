@@ -47,13 +47,23 @@ module.exports = function(server){
       }
     });
 
-    //when client emits add
+    //when client emits add, client send over id
     socket.on('add', function(data){
       try {
         //it will add a meeting to the meeting manager
         socket.emit('add-success', manager.addMeeting(data));
       } catch(e) {
         socket.emit('add-error', e.message);
+      }
+    });
+
+    //when client emits remove, client send over id
+    socket.on('remove', function(data){
+      try {
+        //it will add a meeting to the meeting manager
+        socket.emit('remove-success', manager.removeMeeting(data));
+      } catch(e) {
+        socket.emit('remove-error', e.message);
       }
     });
 

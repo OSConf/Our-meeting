@@ -17,7 +17,7 @@ var Meeting = function(id){
 //ability to add meetings
 MeetingManager.prototype.addMeeting = function(id){
   var meetings = this.meetings;
-
+  //randomizing helper function
   var randomize = function(meetings) {
     var random = Math.round( Math.random()*1000 );
     if( meetings[random] ){
@@ -26,16 +26,40 @@ MeetingManager.prototype.addMeeting = function(id){
       return random;
     }
   };
-
+  //if id is not passed in, will creating a random id that does not already exist
   if(id===undefined){
     id = randomize(meetings);
   }
-
+  //if id that is passed in already exist, will error
   if(meetings[id]){
     throw Error('Meeting already exist');
   } else {
     meetings[id] = new Meeting(id);
     return id;
+  }
+};
+
+//ability to remove a meeting and delete the users from the invitees list
+MeetingManager.prototype.removeMeeting = function(id){
+  //grab all invited users to this meetings
+  var meetingUsers = this.meetings[id].meetInvitees.slice();
+  var that = this;
+  //if this meeting exist
+  if( this.meetings[id] ){
+    _.each(meetingUsers, function(user){
+      //will delete this meeting from user's invite list
+      _.pull(that.invitees[user], id);
+      //will delete the user from the invitees if they have no other invited meetings
+      if(that.invitees[user].length === 0){
+        delete that.invitees[user];
+      }
+    });
+    //delete the meeting
+    delete that.meetings[id];
+    this.alertInvite(meetingUsers);
+    return id;
+  } else {
+    throw Error("Meeting does not exist");
   }
 };
 
@@ -63,11 +87,6 @@ MeetingManager.prototype.joinMeeting = function(meetingID, socketID){
 
 //ability to grab current active user list for the meeting
 MeetingManager.prototype.getMeetingList = function(meetingID){
-  return this.meetings[meetingID].meetUsers;
-};
-
-//ability to grab current active user list for the meeting
-MeetingManager.prototype.alertMeetingList = function(usernames){
   return this.meetings[meetingID].meetUsers;
 };
 
@@ -121,18 +140,24 @@ MeetingManager.prototype.addUserToMeeting = function(meetingID, usernames){
 };
 
 //alert user who were already online, but was invited during that time
+//or those who were deleted from a meeting. will alert them with new invite list
 MeetingManager.prototype.alertInvite = function(usernames){
   var that = this;
   _.each(usernames, function(user){
     var userSocket = that.getUser(user);
-    userSocket.emit('inviteList', that.checkInvite(user) );
+    if(userSocket){
+      userSocket.emit('inviteList', that.checkInvite(user) );
+    }
   });
 };
 
-//check invite for user when they first join
+//check if user is invited to a room, can be called when a user first join or from alertInvite function
+//will return an empty array if user is not invited to anything
 MeetingManager.prototype.checkInvite = function(username){
   if(this.invitees[username] !== undefined){
     return this.invitees[username];
+  } else {
+    return [];
   }
 };
 
