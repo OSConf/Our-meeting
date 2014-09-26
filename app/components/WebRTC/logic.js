@@ -1,7 +1,7 @@
 var client = io({url:'http://localhost'});
 var webrtc = ourMeeting.webrtc();
-var signaller = Signaller();
-var RTC = RTC(webrtc, signaller);
+var signaller = ourMeeting.Signaller();
+var RTC = ourMeeting.RTC(webrtc, signaller);
 
 //timeout for how long to wait before reattempting connection
 var timeout = 3000;

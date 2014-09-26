@@ -7,6 +7,7 @@
   var webrtcDetectedBrowser = null;
   var webrtcDetectedVersion = null;
   var createServer = null;
+  
   window.trace = function(text) {
     // This function is used for logging.
     if (text[text.length - 1] === '\n') {
