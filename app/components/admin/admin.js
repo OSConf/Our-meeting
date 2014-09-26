@@ -19,12 +19,24 @@ function Admin(signaller){
   admin.addMeeting = function(meetingID, success, failure){
     //emits 'add', passing meetingID over
     signaller.send('add', meetingID);
-    //nothing special, listens for 'success'
-    signaller.on('add-success', function(){
-      onReply(success, 'add');
+    //nothing special, listens for 'success' and return ID back
+    signaller.on('add-success', function(data){
+      onReply(success, 'add', data);
     });
-    signaller.on('add-success', function(){
-      onReply(success, 'add');
+    signaller.on('add-error', function(data){
+      onReply(success, 'add', data);
+    });
+  };
+
+  admin.removeMeeting = function(meetingID, success, failure){
+    //emits 'remove', passing meetingID over
+    signaller.send('remove', meetingID);
+    //nothing special, listens for 'success' and return ID back
+    signaller.on('remove-success', function(data){
+      onReply(success, 'remove', data);
+    });
+    signaller.on('remove-error', function(data){
+      onReply(success, 'remove', data);
     });
   };
 
