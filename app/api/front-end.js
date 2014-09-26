@@ -1,6 +1,9 @@
 (function(obj) {
   // Load webrtc here
-  var webrtc = (function() {})();
+  //var client = io({url:'http://localhost'});
+  var webrtc = obj.ourMeeting.webrtc();
+  var signaller = obj.ourMeeting.Signaller();
+  var RTC = obj.ourMeeting.RTC(webrtc, signaller);
 
   var Streams = function() {};
 
