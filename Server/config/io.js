@@ -15,6 +15,7 @@ module.exports = function(server){
   //manager space on connection...
   managerSpace.on('connection', function(socket){
     console.log('Received new socket connection');
+    console.log('user in /manager', socket.id);
 
     //when user join, client will emit "user ready" and send data with username
     socket.on('user-ready', function(data) {
@@ -45,15 +46,14 @@ module.exports = function(server){
         console.log(e.message);
       }
     });
-    console.log('user in /manager', socket.id);
+
     //when client emits add
     socket.on('add', function(data){
       try {
         //it will add a meeting to the meeting manager
-        manager.addMeeting(data);
-        socket.emit('success');
+        socket.emit('add-success', manager.addMeeting(data));
       } catch(e) {
-        socket.emit('err', e.message);
+        socket.emit('add-error', e.message);
       }
     });
 
@@ -61,10 +61,9 @@ module.exports = function(server){
     socket.on('get', function(id){
       try {
         //it will get all meetings or specific meetings from the meeting manager
-        socket.emit('meeting', manager.getMeeting(id) );
-        socket.emit('success');
+        socket.emit('get-success', manager.getMeeting(id) );
       } catch(e) {
-        socket.emit('err', e.message);
+        socket.emit('get-error', e.message);
       }
     });
 
@@ -72,10 +71,9 @@ module.exports = function(server){
     socket.on('get-user', function(username){
       try {
         //it will get all users or specific user's referenced socket
-        socket.emit('user', manager.getUser(username) );
-        socket.emit('success');
+        socket.emit('get-user-success', manager.getUser(username) );
       } catch(e) {
-        socket.emit('err', e.message);
+        socket.emit('get-user-error', e.message);
       }
     });
 
@@ -87,19 +85,20 @@ module.exports = function(server){
         manager.addUserToMeeting(meetingID, usernames);
         //alert the those who are invited
         manager.alertInvite(usernames);
-        socket.emit('success');
+        socket.emit('invite-user-success');
       } catch(e) {
-        socket.emit('err', e.message);
+        socket.emit('invite-user-error', e.message);
       }
     });
 
     //check's if a user is invited to any meeting
     socket.on('check-invite', function(username){
       try {
+        //note: should look at this one again, client will listen for invitelist at all time, no need for success emit?
         socket.emit('inviteList', manager.checkInvite(username) );
-        socket.emit('success');
+        socket.emit('check-invite-success');
       } catch(e) {
-        socket.emit('err', e.message);
+        socket.emit('check-invite-error', e.message);
       }
     });
 
@@ -117,7 +116,7 @@ module.exports = function(server){
           //grab active user list for this meeting and send to all users in room
           var meetingList = manager.getMeetingList(meetingID);
           managerSpace.to(meetingID).emit('roomList', meetingList);
-          socket.emit('success');
+          socket.emit('join-success');
         }
       } catch(e) {
         socket.emit('err', e.message);

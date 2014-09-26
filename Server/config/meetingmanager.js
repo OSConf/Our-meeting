@@ -16,7 +16,27 @@ var Meeting = function(id){
 
 //ability to add meetings
 MeetingManager.prototype.addMeeting = function(id){
-  this.meetings[id] = new Meeting(id);
+  var meetings = this.meetings;
+
+  var randomize = function(meetings) {
+    var random = Math.round( Math.random()*1000 );
+    if( meetings[random] ){
+      return randomize(meetings);
+    } else {
+      return random;
+    }
+  };
+
+  if(id===undefined){
+    id = randomize(meetings);
+  }
+
+  if(meetings[id]){
+    throw Error('Meeting already exist');
+  } else {
+    meetings[id] = new Meeting(id);
+    return id;
+  }
 };
 
 //ability to get all meetings or just one specific meeting
