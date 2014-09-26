@@ -77,7 +77,7 @@ module.exports = function(grunt){
       },
       my_target: {
         files: {
-          'app/api/om.min.js': ['app/api/om.concat.js']
+          'dist/om.min.js': ['dist/om.concat.js']
         }
       }
     },
@@ -88,7 +88,7 @@ module.exports = function(grunt){
       },
       dist: {
         src: ['app/components/WebRTC/webrtc.js', 'app/components/WebRTC/signalling.js', 'app/components/WebRTC/rtcpeerconnection.js', 'app/api/front-end.js', 'app/components/client/scripts/directives.js'],
-        dest: 'app/api/om.concat.js',
+        dest: 'dist/om.concat.js',
       },
     },
 	});
