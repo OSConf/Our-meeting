@@ -81,3 +81,4 @@ angular.module('ourMeeting', [])
       template: '<ul class="chat"><li ng-repeat="chat in meeting.chat">{{chat.name}}: {{chat.message}}</li></ul>'
     };
   });
+  
