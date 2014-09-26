@@ -10,13 +10,13 @@
     /* Statics */
   };
 
-  om.prototype.whiteboard = {
+  obj.ourMeeting.prototype.whiteboard = {
     insert: function() {
 
     }
   };
 
-  om.prototype.meeting = {
+  obj.ourMeeting.prototype.meeting = {
     getMeeting: function(meetingID) {
 
     },
@@ -34,7 +34,7 @@
     }
   };
 
-  om.prototype.admin = {
+  obj.ourMeeting.prototype.admin = {
     createMeeting: function() {
 
     },
@@ -49,7 +49,7 @@
     }
   };
 
-  om.prototype.currentUser = {
+  obj.ourMeeting.prototype.currentUser = {
     joinMeeting: function(meetingID) {
 
     },
