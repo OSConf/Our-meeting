@@ -12,6 +12,12 @@ function Signaller(){
 		receive: function(evt, callback){
 			socket.on(evt, callback);
 		},
+    on: function(evt, callback){
+      socket.on(evt, callback);
+    },
+    off: function(evt){
+      socket.off(evt);
+    }
 	};
 }
 
