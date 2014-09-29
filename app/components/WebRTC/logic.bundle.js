@@ -1,102 +1,406 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.webrtc=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
-}
+!function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.OurMeeting=e():"undefined"!=typeof global?global.OurMeeting=e():"undefined"!=typeof self&&(self.OurMeeting=e())}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var client = io({url:'http://localhost'});
+var webrtc = require('./peer.js');
+var rtc = webrtc.RTC();
+var signaller = rtc.signaller;
+var socket = rtc.transport.socket;
 
-},{}],2:[function(require,module,exports){
-// shim for using process in browser
+var user = Math.floor(Math.random()*25);
+//register self
+socket.on('connect', function(){
+  socket.emit('user-ready', {username:user});
+});
+socket.on('new-peer', function(){
+  console.log('new peer');
+});
+rtc.start(null, function(err, stream){
+  rtc.transport.socket.emit('join',{id:1234});
+});
 
-var process = module.exports = {};
+webrtc.onRemoteStream(function(stream, elem){
+  console.log('Hello, a stream has been added <=============================');
+  document.getElementById('userlist')
+    .appendChild(elem);
+});
 
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
+module.exports = webrtc;
+},{"./peer.js":2}],2:[function(require,module,exports){
+var WebRTC = require('om-webrtc');
+var Signaller = require('./signalling.js')();
+var rtcman = require('./webrtc.js')();
+var config = {};
 
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
-    }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            var source = ev.source;
-            if ((source === window || source === null) && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-}
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
+config.transport = function(){
+  return Signaller;
 };
 
-},{}],3:[function(require,module,exports){
-module.exports = function isBuffer(arg) {
-  return arg && typeof arg === 'object'
-    && typeof arg.copy === 'function'
-    && typeof arg.fill === 'function'
-    && typeof arg.readUInt8 === 'function';
+config.signallerConfig = function(transport){
+  return {
+    send:transport.send,
+    receive:transport.receive
+  };
+};
+
+//What to do when a new stream is received
+//Should have properties onLocalStream, onRemoveLocalStream, onRemoteStream, onRemoveRemoteStream
+config.streamConfig = {
+  onLocalStream: function(stream){
+    rtcman.onlocalstream(stream);
+  },
+  onRemoteStream: function(peer){
+    rtcman.onremotestream(peer);
+  },
+  onRemoveRemoteStream: function(peer){
+    rtcman.onremotestreamremoval(peer);
+  }
+};
+rtcman.setRTC(new WebRTC(config));
+module.exports = rtcman;
+},{"./signalling.js":3,"./webrtc.js":4,"om-webrtc":9}],3:[function(require,module,exports){
+function Signaller(){
+  var socket = io.connect('/manager');
+  socket.on('error', function(err){
+    console.log('socket error', err);
+  });
+
+	return {
+    socket:socket,
+		send: function(evt, data){
+      socket.emit(evt, data);
+		},
+		receive: function(evt, callback){
+			socket.on(evt, callback);
+		},
+    on: function(evt, callback){
+      socket.on(evt, callback);
+    },
+    off: function(evt){
+      socket.off(evt);
+    }
+	};
 }
+
+module.exports = Signaller;
 },{}],4:[function(require,module,exports){
-(function (process,global){
+//User a function to make this easily adaptable to angular
+function WebRTC(){
+	var webrtc = {};
+	var me = { stream: null, id:null };
+	var peers = {};
+
+	webrtc.setRTC = function(peerObj){
+		peers = peerObj;
+	};
+
+	webrtc.getPeers = function(){
+		return peers.getPeers();
+	};
+
+	webrtc.addLocalStream = function(stream){
+		me.stream = stream;
+	};
+
+	//Actions to take when receiving a local stream
+	webrtc.onLocalStream = function(callback){
+		webrtc.onLocalStream = callback;
+	};
+
+	webrtc.onlocalstream = function(stream){
+		webrtc.addLocalStream(stream);
+		webrtc.onLocalStream(stream);
+	};
+
+	//Actions to be taken when receiving a remote stream
+	webrtc.onRemoteStream = function(callback){
+		webrtc.onRemoteStream = callback;
+	};
+
+	webrtc.onremotestream = function(peer){
+		var elem = document.createElement('video');
+		elem.autoplay = true;
+		elem.id = peer.id;
+		attachMediaStream(elem, peer.stream);
+		webrtc.onRemoteStream(peer.stream, elem, peer.id, peer);
+	};
+
+	webrtc.onRemoteStreamRemoval = function(callback){
+		webrtc.onRemoteStreamRemoval = callback;
+	};
+
+	webrtc.onremotestreamremoval = function(peer){
+		webrtc.onRemoteStreamRemoval(peer);
+	};
+
+	webrtc.getAllUsers = function(){
+		var ids = [];
+		var peers = webrtc.getPeers();
+		peers.forEach(function(pc){
+			ids.push(pc.id);
+		});
+		return ids;
+	};
+
+	webrtc.getUser = function(user){
+		var users = peers.getPeers(user);
+		if(users){
+			return users[0];
+		}
+	};
+	//Stream has all associated streams, video/audio/datachannel
+	webrtc.getStream = function(user){
+		var peer = webrtc.getUser(user);
+		if(peer !== undefined){
+			return peer.stream;
+		}
+	};
+
+	webrtc.getVideoStream = function(user){
+		var stream = webrtc.getStream(user);
+		if(stream !== undefined) {
+			return stream.getVideoTracks();
+		}
+	};
+
+	webrtc.getAudioStream = function(user){
+		var stream = webrtc.getStream(user);
+		if(stream !== undefined) {
+			return stream.getAudioTracks();
+		}
+	};
+
+	webrtc.setId = function(id){
+		me.id = id;
+	};
+
+	webrtc.getMyInfo = function(){
+		return me;
+	};
+
+	webrtc.RTC = function(){
+		return peers;
+	};
+	return webrtc;
+}
+module.exports = WebRTC;
+},{}],5:[function(require,module,exports){
+
+
+//
+// The shims in this file are not fully implemented shims for the ES5
+// features, but do work for the particular usecases there is in
+// the other modules.
+//
+
+var toString = Object.prototype.toString;
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+// Array.isArray is supported in IE9
+function isArray(xs) {
+  return toString.call(xs) === '[object Array]';
+}
+exports.isArray = typeof Array.isArray === 'function' ? Array.isArray : isArray;
+
+// Array.prototype.indexOf is supported in IE9
+exports.indexOf = function indexOf(xs, x) {
+  if (xs.indexOf) return xs.indexOf(x);
+  for (var i = 0; i < xs.length; i++) {
+    if (x === xs[i]) return i;
+  }
+  return -1;
+};
+
+// Array.prototype.filter is supported in IE9
+exports.filter = function filter(xs, fn) {
+  if (xs.filter) return xs.filter(fn);
+  var res = [];
+  for (var i = 0; i < xs.length; i++) {
+    if (fn(xs[i], i, xs)) res.push(xs[i]);
+  }
+  return res;
+};
+
+// Array.prototype.forEach is supported in IE9
+exports.forEach = function forEach(xs, fn, self) {
+  if (xs.forEach) return xs.forEach(fn, self);
+  for (var i = 0; i < xs.length; i++) {
+    fn.call(self, xs[i], i, xs);
+  }
+};
+
+// Array.prototype.map is supported in IE9
+exports.map = function map(xs, fn) {
+  if (xs.map) return xs.map(fn);
+  var out = new Array(xs.length);
+  for (var i = 0; i < xs.length; i++) {
+    out[i] = fn(xs[i], i, xs);
+  }
+  return out;
+};
+
+// Array.prototype.reduce is supported in IE9
+exports.reduce = function reduce(array, callback, opt_initialValue) {
+  if (array.reduce) return array.reduce(callback, opt_initialValue);
+  var value, isValueSet = false;
+
+  if (2 < arguments.length) {
+    value = opt_initialValue;
+    isValueSet = true;
+  }
+  for (var i = 0, l = array.length; l > i; ++i) {
+    if (array.hasOwnProperty(i)) {
+      if (isValueSet) {
+        value = callback(value, array[i], i, array);
+      }
+      else {
+        value = array[i];
+        isValueSet = true;
+      }
+    }
+  }
+
+  return value;
+};
+
+// String.prototype.substr - negative index don't work in IE8
+if ('ab'.substr(-1) !== 'b') {
+  exports.substr = function (str, start, length) {
+    // did we get a negative start, calculate how much it is from the beginning of the string
+    if (start < 0) start = str.length + start;
+
+    // call the original function
+    return str.substr(start, length);
+  };
+} else {
+  exports.substr = function (str, start, length) {
+    return str.substr(start, length);
+  };
+}
+
+// String.prototype.trim is supported in IE9
+exports.trim = function (str) {
+  if (str.trim) return str.trim();
+  return str.replace(/^\s+|\s+$/g, '');
+};
+
+// Function.prototype.bind is supported in IE9
+exports.bind = function () {
+  var args = Array.prototype.slice.call(arguments);
+  var fn = args.shift();
+  if (fn.bind) return fn.bind.apply(fn, args);
+  var self = args.shift();
+  return function () {
+    fn.apply(self, args.concat([Array.prototype.slice.call(arguments)]));
+  };
+};
+
+// Object.create is supported in IE9
+function create(prototype, properties) {
+  var object;
+  if (prototype === null) {
+    object = { '__proto__' : null };
+  }
+  else {
+    if (typeof prototype !== 'object') {
+      throw new TypeError(
+        'typeof prototype[' + (typeof prototype) + '] != \'object\''
+      );
+    }
+    var Type = function () {};
+    Type.prototype = prototype;
+    object = new Type();
+    object.__proto__ = prototype;
+  }
+  if (typeof properties !== 'undefined' && Object.defineProperties) {
+    Object.defineProperties(object, properties);
+  }
+  return object;
+}
+exports.create = typeof Object.create === 'function' ? Object.create : create;
+
+// Object.keys and Object.getOwnPropertyNames is supported in IE9 however
+// they do show a description and number property on Error objects
+function notObject(object) {
+  return ((typeof object != "object" && typeof object != "function") || object === null);
+}
+
+function keysShim(object) {
+  if (notObject(object)) {
+    throw new TypeError("Object.keys called on a non-object");
+  }
+
+  var result = [];
+  for (var name in object) {
+    if (hasOwnProperty.call(object, name)) {
+      result.push(name);
+    }
+  }
+  return result;
+}
+
+// getOwnPropertyNames is almost the same as Object.keys one key feature
+//  is that it returns hidden properties, since that can't be implemented,
+//  this feature gets reduced so it just shows the length property on arrays
+function propertyShim(object) {
+  if (notObject(object)) {
+    throw new TypeError("Object.getOwnPropertyNames called on a non-object");
+  }
+
+  var result = keysShim(object);
+  if (exports.isArray(object) && exports.indexOf(object, 'length') === -1) {
+    result.push('length');
+  }
+  return result;
+}
+
+var keys = typeof Object.keys === 'function' ? Object.keys : keysShim;
+var getOwnPropertyNames = typeof Object.getOwnPropertyNames === 'function' ?
+  Object.getOwnPropertyNames : propertyShim;
+
+if (new Error().hasOwnProperty('description')) {
+  var ERROR_PROPERTY_FILTER = function (obj, array) {
+    if (toString.call(obj) === '[object Error]') {
+      array = exports.filter(array, function (name) {
+        return name !== 'description' && name !== 'number' && name !== 'message';
+      });
+    }
+    return array;
+  };
+
+  exports.keys = function (object) {
+    return ERROR_PROPERTY_FILTER(object, keys(object));
+  };
+  exports.getOwnPropertyNames = function (object) {
+    return ERROR_PROPERTY_FILTER(object, getOwnPropertyNames(object));
+  };
+} else {
+  exports.keys = keys;
+  exports.getOwnPropertyNames = getOwnPropertyNames;
+}
+
+// Object.getOwnPropertyDescriptor - supported in IE8 but only on dom elements
+function valueObject(value, key) {
+  return { value: value[key] };
+}
+
+if (typeof Object.getOwnPropertyDescriptor === 'function') {
+  try {
+    Object.getOwnPropertyDescriptor({'a': 1}, 'a');
+    exports.getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+  } catch (e) {
+    // IE8 dom element issue - use a try catch and default to valueObject
+    exports.getOwnPropertyDescriptor = function (value, key) {
+      try {
+        return Object.getOwnPropertyDescriptor(value, key);
+      } catch (e) {
+        return valueObject(value, key);
+      }
+    };
+  }
+} else {
+  exports.getOwnPropertyDescriptor = valueObject;
+}
+
+},{}],6:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -117,6 +421,8 @@ module.exports = function isBuffer(arg) {
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+var shims = require('_shims');
 
 var formatRegExp = /%[sdj%]/g;
 exports.format = function(f) {
@@ -156,62 +462,6 @@ exports.format = function(f) {
   }
   return str;
 };
-
-
-// Mark that a method should not be used.
-// Returns a modified function which warns once by default.
-// If --no-deprecation is set, then it is a no-op.
-exports.deprecate = function(fn, msg) {
-  // Allow for deprecating things in the process of starting up.
-  if (isUndefined(global.process)) {
-    return function() {
-      return exports.deprecate(fn, msg).apply(this, arguments);
-    };
-  }
-
-  if (process.noDeprecation === true) {
-    return fn;
-  }
-
-  var warned = false;
-  function deprecated() {
-    if (!warned) {
-      if (process.throwDeprecation) {
-        throw new Error(msg);
-      } else if (process.traceDeprecation) {
-        console.trace(msg);
-      } else {
-        console.error(msg);
-      }
-      warned = true;
-    }
-    return fn.apply(this, arguments);
-  }
-
-  return deprecated;
-};
-
-
-var debugs = {};
-var debugEnviron;
-exports.debuglog = function(set) {
-  if (isUndefined(debugEnviron))
-    debugEnviron = process.env.NODE_DEBUG || '';
-  set = set.toUpperCase();
-  if (!debugs[set]) {
-    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
-      var pid = process.pid;
-      debugs[set] = function() {
-        var msg = exports.format.apply(exports, arguments);
-        console.error('%s %d: %s', set, pid, msg);
-      };
-    } else {
-      debugs[set] = function() {};
-    }
-  }
-  return debugs[set];
-};
-
 
 /**
  * Echos the value of a value. Trys to print the value out
@@ -299,7 +549,7 @@ function stylizeNoColor(str, styleType) {
 function arrayToHash(array) {
   var hash = {};
 
-  array.forEach(function(val, idx) {
+  shims.forEach(array, function(val, idx) {
     hash[val] = true;
   });
 
@@ -317,7 +567,7 @@ function formatValue(ctx, value, recurseTimes) {
       value.inspect !== exports.inspect &&
       // Also filter out any prototype objects using the circular check.
       !(value.constructor && value.constructor.prototype === value)) {
-    var ret = value.inspect(recurseTimes, ctx);
+    var ret = value.inspect(recurseTimes);
     if (!isString(ret)) {
       ret = formatValue(ctx, ret, recurseTimes);
     }
@@ -331,18 +581,11 @@ function formatValue(ctx, value, recurseTimes) {
   }
 
   // Look up the keys of the object.
-  var keys = Object.keys(value);
+  var keys = shims.keys(value);
   var visibleKeys = arrayToHash(keys);
 
   if (ctx.showHidden) {
-    keys = Object.getOwnPropertyNames(value);
-  }
-
-  // IE doesn't make error fields non-enumerable
-  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
-  if (isError(value)
-      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
-    return formatError(value);
+    keys = shims.getOwnPropertyNames(value);
   }
 
   // Some type of object without properties can be shortcutted.
@@ -454,7 +697,8 @@ function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
       output.push('');
     }
   }
-  keys.forEach(function(key) {
+
+  shims.forEach(keys, function(key) {
     if (!key.match(/^\d+$/)) {
       output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
           key, true));
@@ -466,7 +710,7 @@ function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
 
 function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
   var name, str, desc;
-  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
+  desc = shims.getOwnPropertyDescriptor(value, key) || { value: value[key] };
   if (desc.get) {
     if (desc.set) {
       str = ctx.stylize('[Getter/Setter]', 'special');
@@ -478,11 +722,12 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
       str = ctx.stylize('[Setter]', 'special');
     }
   }
+
   if (!hasOwnProperty(visibleKeys, key)) {
     name = '[' + key + ']';
   }
   if (!str) {
-    if (ctx.seen.indexOf(desc.value) < 0) {
+    if (shims.indexOf(ctx.seen, desc.value) < 0) {
       if (isNull(recurseTimes)) {
         str = formatValue(ctx, desc.value, null);
       } else {
@@ -525,7 +770,7 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
 
 function reduceToSingleString(output, base, braces) {
   var numLinesEst = 0;
-  var length = output.reduce(function(prev, cur) {
+  var length = shims.reduce(output, function(prev, cur) {
     numLinesEst++;
     if (cur.indexOf('\n') >= 0) numLinesEst++;
     return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
@@ -547,7 +792,7 @@ function reduceToSingleString(output, base, braces) {
 // NOTE: These type checking functions intentionally don't use `instanceof`
 // because it is fragile and can be easily faked with `Object.create()`.
 function isArray(ar) {
-  return Array.isArray(ar);
+  return shims.isArray(ar);
 }
 exports.isArray = isArray;
 
@@ -592,7 +837,7 @@ function isRegExp(re) {
 exports.isRegExp = isRegExp;
 
 function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
+  return typeof arg === 'object' && arg;
 }
 exports.isObject = isObject;
 
@@ -602,8 +847,7 @@ function isDate(d) {
 exports.isDate = isDate;
 
 function isError(e) {
-  return isObject(e) &&
-      (objectToString(e) === '[object Error]' || e instanceof Error);
+  return isObject(e) && objectToString(e) === '[object Error]';
 }
 exports.isError = isError;
 
@@ -622,7 +866,14 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = require('./support/isBuffer');
+function isBuffer(arg) {
+  return arg && typeof arg === 'object'
+    && typeof arg.copy === 'function'
+    && typeof arg.fill === 'function'
+    && typeof arg.binarySlice === 'function'
+  ;
+}
+exports.isBuffer = isBuffer;
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -666,13 +917,23 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = require('inherits');
+exports.inherits = function(ctor, superCtor) {
+  ctor.super_ = superCtor;
+  ctor.prototype = shims.create(superCtor.prototype, {
+    constructor: {
+      value: ctor,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+};
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
   if (!add || !isObject(add)) return origin;
 
-  var keys = Object.keys(add);
+  var keys = shims.keys(add);
   var i = keys.length;
   while (i--) {
     origin[keys[i]] = add[keys[i]];
@@ -684,186 +945,7 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":3,"_process":2,"inherits":1}],5:[function(require,module,exports){
-var client = io({url:'http://localhost'});
-var webrtc = require('./peer.js');
-var rtc = webrtc.RTC();
-var signaller = rtc.signaller;
-var socket = rtc.transport.socket;
-
-var user = Math.floor(Math.random()*25);
-//register self
-socket.on('connect', function(){
-  socket.emit('user-ready', {username:user});
-});
-socket.on('new-peer', function(){
-  console.log('new peer');
-});
-rtc.start(null, function(err, stream){
-  rtc.transport.socket.emit('join',{id:1234});
-});
-
-webrtc.onRemoteStream(function(stream, elem){
-  console.log('Hello, a stream has been added <=============================');
-  document.getElementById('userlist')
-    .appendChild(elem);
-});
-
-module.exports = webrtc;
-},{"./peer.js":6}],6:[function(require,module,exports){
-var WebRTC = require('om-webrtc');
-var Signaller = require('./signalling.js')();
-var rtcman = require('./webrtc.js')();
-var config = {};
-
-config.transport = function(){
-  return Signaller;
-};
-
-config.signallerConfig = function(transport){
-  return {
-    send:transport.send,
-    receive:transport.receive
-  };
-};
-
-//What to do when a new stream is received
-//Should have properties onLocalStream, onRemoveLocalStream, onRemoteStream, onRemoveRemoteStream
-config.streamConfig = {
-  onLocalStream: function(stream){
-    rtcman.onlocalstream(stream);
-  },
-  onRemoteStream: function(peer){
-    rtcman.onremotestream(peer);
-  },
-  onRemoveRemoteStream: function(peer){
-    rtcman.onremotestreamremoval(peer);
-  }
-};
-rtcman.setRTC(new WebRTC(config));
-module.exports = rtcman;
-},{"./signalling.js":7,"./webrtc.js":8,"om-webrtc":11}],7:[function(require,module,exports){
-function Signaller(){
-  var socket = io.connect('/manager');
-  socket.on('error', function(err){
-    console.log('socket error', err);
-  });
-
-	return {
-    socket:socket,
-		send: function(evt, data){
-      socket.emit(evt, data);
-		},
-		receive: function(evt, callback){
-			socket.on(evt, callback);
-		},
-	};
-}
-
-module.exports = Signaller;
-},{}],8:[function(require,module,exports){
-//User a function to make this easily adaptable to angular
-function WebRTC(){
-	var webrtc = {};
-	var me = { stream: null, id:null };
-	var peers = {};
-
-	webrtc.setRTC = function(peerObj){
-		peers = peerObj;
-	};
-
-	webrtc.getPeers = function(){
-		return peers.getPeers();
-	};
-
-	webrtc.addLocalStream = function(stream){
-		me.stream = stream;
-	};
-
-	//Actions to take when receiving a local stream
-	webrtc.onLocalStream = function(callback){
-		webrtc.onLocalStream = callback;
-	};
-
-	webrtc.onlocalstream = function(stream){
-		webrtc.addLocalStream(stream);
-		webrtc.onLocalStream(stream);
-	};
-
-	//Actions to be taken when receiving a remote stream
-	webrtc.onRemoteStream = function(callback){
-		webrtc.onRemoteStream = callback;
-	};
-
-	webrtc.onremotestream = function(peer){
-		var elem = document.createElement('video');
-		elem.autoplay = true;
-		elem.id = peer.id;
-		attachMediaStream(elem, peer.stream);
-		webrtc.onRemoteStream(peer.stream, elem, peer.id, peer);
-	};
-
-	webrtc.onRemoteStreamRemoval = function(callback){
-		webrtc.onRemoteStreamRemoval = callback;
-	};
-
-	webrtc.onremotestreamremoval = function(peer){
-		webrtc.onRemoteStreamRemoval(peer);
-	};
-
-	webrtc.getAllUsers = function(){
-		var ids = [];
-		var peers = webrtc.getPeers();
-		peers.forEach(function(pc){
-			ids.push(pc.id);
-		});
-		return ids;
-	};
-
-	webrtc.getUser = function(user){
-		var users = peers.getPeers(user);
-		if(users){
-			return users[0];
-		}
-	};
-	//Stream has all associated streams, video/audio/datachannel
-	webrtc.getStream = function(user){
-		var peer = webrtc.getUser(user);
-		if(peer !== undefined){
-			return peer.stream;
-		}
-	};
-
-	webrtc.getVideoStream = function(user){
-		var stream = webrtc.getStream(user);
-		if(stream !== undefined) {
-			return stream.getVideoTracks();
-		}
-	};
-
-	webrtc.getAudioStream = function(user){
-		var stream = webrtc.getStream(user);
-		if(stream !== undefined) {
-			return stream.getAudioTracks();
-		}
-	};
-
-	webrtc.setId = function(id){
-		me.id = id;
-	};
-
-	webrtc.getMyInfo = function(){
-		return me;
-	};
-
-	webrtc.RTC = function(){
-		return peers;
-	};
-	return webrtc;
-}
-module.exports = WebRTC;
-},{}],9:[function(require,module,exports){
+},{"_shims":5}],7:[function(require,module,exports){
 /*
   All Events
 */
@@ -917,7 +999,7 @@ Logger.prototype.checkEvent = function(evt){
 };
 
 module.exports = Logger;
-},{}],10:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 //Custom configurations go here
 
 //PeerConnection config
@@ -971,9 +1053,9 @@ module.exports.webrtcConfig = {};
 //What to do when a new stream is received
 //Should have properties onLocalStream, onRemoveLocalStream, onRemoteStream, onRemoveRemoteStream
 module.exports.streamsConfig = {};
-},{}],11:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 module.exports = require('./wrtclib');
-},{"./wrtclib":31}],12:[function(require,module,exports){
+},{"./wrtclib":29}],10:[function(require,module,exports){
 var util = require('util');
 var hark = require('hark');
 var webrtc = require('webrtcsupport');
@@ -1251,7 +1333,7 @@ Object.defineProperty(LocalMedia.prototype, 'localScreen', {
 
 module.exports = LocalMedia;
 
-},{"getscreenmedia":13,"getusermedia":14,"hark":15,"mediastream-gain":16,"mockconsole":18,"util":4,"webrtcsupport":27,"wildemitter":28}],13:[function(require,module,exports){
+},{"getscreenmedia":11,"getusermedia":12,"hark":13,"mediastream-gain":14,"mockconsole":16,"util":6,"webrtcsupport":25,"wildemitter":26}],11:[function(require,module,exports){
 // getScreenMedia helper by @HenrikJoreteg
 var getUserMedia = require('getusermedia');
 
@@ -1367,7 +1449,7 @@ window.addEventListener('message', function (event) {
     }
 });
 
-},{"getusermedia":14}],14:[function(require,module,exports){
+},{"getusermedia":12}],12:[function(require,module,exports){
 // getUserMedia helper by @HenrikJoreteg
 var func = (window.navigator.getUserMedia ||
             window.navigator.webkitGetUserMedia ||
@@ -1435,7 +1517,7 @@ module.exports = function (constraints, cb) {
     });
 };
 
-},{}],15:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var WildEmitter = require('wildemitter');
 
 function getMaxVolume (analyser, fftBins) {
@@ -1565,7 +1647,7 @@ module.exports = function(stream, options) {
   return harker;
 }
 
-},{"wildemitter":28}],16:[function(require,module,exports){
+},{"wildemitter":26}],14:[function(require,module,exports){
 var support = require('webrtcsupport');
 
 
@@ -1612,7 +1694,7 @@ GainController.prototype.on = function () {
 
 module.exports = GainController;
 
-},{"webrtcsupport":17}],17:[function(require,module,exports){
+},{"webrtcsupport":15}],15:[function(require,module,exports){
 // created by @HenrikJoreteg
 var prefix;
 var isChrome = false;
@@ -1650,7 +1732,7 @@ module.exports = {
     IceCandidate: IceCandidate
 };
 
-},{}],18:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var methods = "assert,count,debug,dir,dirxml,error,exception,group,groupCollapsed,groupEnd,info,log,markTimeline,profile,profileEnd,time,timeEnd,trace,warn".split(",");
 var l = methods.length;
 var fn = function () {};
@@ -1662,7 +1744,7 @@ while (l--) {
 
 module.exports = mockconsole;
 
-},{}],19:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 var tosdp = require('./lib/tosdp');
 var tojson = require('./lib/tojson');
 
@@ -1675,7 +1757,7 @@ exports.toSessionJSON = tojson.toSessionJSON;
 exports.toMediaJSON = tojson.toMediaJSON;
 exports.toCandidateJSON = tojson.toCandidateJSON;
 
-},{"./lib/tojson":21,"./lib/tosdp":22}],20:[function(require,module,exports){
+},{"./lib/tojson":19,"./lib/tosdp":20}],18:[function(require,module,exports){
 exports.lines = function (sdp) {
     return sdp.split('\r\n').filter(function (line) {
         return line.length > 0;
@@ -1936,7 +2018,7 @@ exports.bandwidth = function (line) {
     return parsed;
 };
 
-},{}],21:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 var parsers = require('./parsers');
 var idCounter = Math.random();
 
@@ -2126,7 +2208,7 @@ exports.toCandidateJSON = function (line) {
     return candidate;
 };
 
-},{"./parsers":20}],22:[function(require,module,exports){
+},{"./parsers":18}],20:[function(require,module,exports){
 var senders = {
     'initiator': 'sendonly',
     'responder': 'recvonly',
@@ -2340,7 +2422,7 @@ exports.toCandidateSDP = function (candidate) {
     return 'a=candidate:' + sdp.join(' ');
 };
 
-},{}],23:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // based on https://github.com/ESTOS/strophe.jingle/
 // adds wildemitter support
 var util = require('util');
@@ -2560,9 +2642,9 @@ TraceablePeerConnection.prototype.getStats = function (callback, errback) {
 
 module.exports = TraceablePeerConnection;
 
-},{"util":4,"webrtcsupport":24,"wildemitter":28}],24:[function(require,module,exports){
-module.exports=require(17)
-},{"C:\\Users\\gewen_000\\Documents\\Github\\Our-meeting\\node_modules\\om-webrtc\\node_modules\\webrtc\\node_modules\\localmedia\\node_modules\\mediastream-gain\\node_modules\\webrtcsupport\\index-browser.js":17}],25:[function(require,module,exports){
+},{"util":6,"webrtcsupport":22,"wildemitter":26}],22:[function(require,module,exports){
+module.exports=require(15)
+},{}],23:[function(require,module,exports){
 //     Underscore.js 1.7.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -3979,7 +4061,7 @@ module.exports=require(17)
   }
 }.call(this));
 
-},{}],26:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var _ = require('underscore');
 var util = require('util');
 var webrtc = require('webrtcsupport');
@@ -4443,7 +4525,7 @@ PeerConnection.prototype.getStats = function (cb) {
 
 module.exports = PeerConnection;
 
-},{"sdp-jingle-json":19,"traceablepeerconnection":23,"underscore":25,"util":4,"webrtcsupport":27,"wildemitter":28}],27:[function(require,module,exports){
+},{"sdp-jingle-json":17,"traceablepeerconnection":21,"underscore":23,"util":6,"webrtcsupport":25,"wildemitter":26}],25:[function(require,module,exports){
 // created by @HenrikJoreteg
 var prefix;
 var isChrome = false;
@@ -4484,7 +4566,7 @@ module.exports = {
     MediaStream: MediaStream
 };
 
-},{}],28:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /*
 WildEmitter.js is a slim little event emitter by @henrikjoreteg largely based 
 on @visionmedia's Emitter from UI Kit.
@@ -4625,7 +4707,7 @@ WildEmitter.prototype.getWildcardCallbacks = function (eventName) {
     return result;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 var util = require('util');
 var webrtc = require('webrtcsupport');
 var PeerConnection = require('rtcpeerconnection');
@@ -4838,7 +4920,7 @@ Peer.prototype.handleDataChannelAdded = function (channel) {
 
 module.exports = Peer;
 
-},{"rtcpeerconnection":26,"util":4,"webrtcsupport":27,"wildemitter":28}],30:[function(require,module,exports){
+},{"rtcpeerconnection":24,"util":6,"webrtcsupport":25,"wildemitter":26}],28:[function(require,module,exports){
 var util = require('util');
 var webrtc = require('webrtcsupport');
 var WildEmitter = require('wildemitter');
@@ -5003,7 +5085,7 @@ WebRTC.prototype.sendDirectlyToAll = function (channel, message, payload) {
 
 module.exports = WebRTC;
 
-},{"./peer":29,"localmedia":12,"mockconsole":18,"util":4,"webrtcsupport":27,"wildemitter":28}],31:[function(require,module,exports){
+},{"./peer":27,"localmedia":10,"mockconsole":16,"util":6,"webrtcsupport":25,"wildemitter":26}],29:[function(require,module,exports){
 var config = require('./configs');
 var Logger = require('./Logger');
 var WebRTC = require('webrtc');
@@ -5192,5 +5274,7 @@ function Rtclib(client, config){
   return wrtc;
 }
 
-},{"./Logger":9,"./configs":10,"webrtc":30}]},{},[5])(5)
+},{"./Logger":7,"./configs":8,"webrtc":28}]},{},[1])
+(1)
 });
+;
