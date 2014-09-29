@@ -1,70 +1,70 @@
-(function(obj) {
-  // Load webrtc here
-  //var client = io({url:'http://localhost'});
-  var webrtc = obj.ourMeeting.webrtc();
-  var signaller = obj.ourMeeting.Signaller();
-  var RTC = obj.ourMeeting.RTC(webrtc, signaller);
+// Load webrtc here
+var webrtc = require('../components/WebRTC/webrtc');
+var Admin = require('../components/admin/admin.js');
+var RTC = webrtc.RTC();
+var signaller = RTC.transport;
 
-  var Streams = function() {};
+module.exports = ourMeeting;
 
-  var User = function() {};
+var Streams = function() {};
 
-  obj.ourMeeting = function() {
-    /* Statics */
-  };
+var User = function() {};
 
-  obj.ourMeeting.prototype.whiteboard = {
-    insert: function() {
+var ourMeeting = function() {
+  /* Statics */
+};
 
-    }
-  };
+ourMeeting.prototype.whiteboard = {
+  insert: function() {
 
-  obj.ourMeeting.prototype.meeting = {
-    getMeeting: function(meetingID) {
+  }
+};
 
-    },
-    invitedUsers: function(meetingID) {
+ourMeeting.prototype.meeting = {
+  getMeeting: function(meetingID) {
 
-    },
-    connectedUsers: function(meetingId) {
+  },
+  invitedUsers: function(meetingID) {
 
-    },
-    sendMessage: function(message, meetingID) {
+  },
+  connectedUsers: function(meetingId) {
 
-    },
-    retreiveMessages: function(meetingID) {
+  },
+  sendMessage: function(message, meetingID) {
 
-    }
-  };
+  },
+  retreiveMessages: function(meetingID) {
 
-  obj.ourMeeting.prototype.admin = {
-    createMeeting: function() {
+  }
+};
 
-    },
-    openMeetings: function() {
+ourMeeting.prototype.admin = {
+  createMeeting: function() {
 
-    },
-    findUser: function(userID) {
+  },
+  openMeetings: function() {
 
-    },
-    closeMeeting: function(meetingID) {
+  },
+  findUser: function(userID) {
 
-    }
-  };
+  },
+  closeMeeting: function(meetingID) {
 
-  obj.ourMeeting.prototype.currentUser = {
-    joinMeeting: function(meetingID) {
+  }
+};
 
-    },
-    checkInvites: function() {
+ourMeeting.prototype.currentUser = {
+  joinMeeting: function(meetingID) {
 
-    },
-    name: 'name',
-    getStreams: function() {
+  },
+  checkInvites: function() {
 
-    },
-    leaveMeeting: function(meetingID) {
+  },
+  name: 'name',
+  getStreams: function() {
 
-    }
-  };
-})(window);
+  },
+  leaveMeeting: function(meetingID) {
+
+  }
+};
