@@ -22,6 +22,7 @@
   "dependencies": {
     "express": "^4.9.3",
     "lodash": "^2.4.1",
+    "om-webrtc": "0.0.1",
     "socket.io": "^1.1.0"
   },
   "devDependencies": {
@@ -37,7 +38,6 @@
     "grunt-concurrent": "^1.0.0",
     "grunt-node-inspector": "^0.1.5",
     "grunt-nodemon": "^0.3.0",
-    "mocha": "^1.21.4",
     "socket.io": "^1.1.0",
     "socket.io-client": "^1.1.0"
   }

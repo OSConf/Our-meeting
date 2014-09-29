@@ -1,7 +1,11 @@
 (function(window){
-  function RTC(WebRTC, Signaller){
-  	var rtc = {};
+  function RTC(WebRTC, Signaller, config){
+  var rtc = {};
 
+  var constriant = {mandatory:{
+    'offerToReceiveVideo':true,
+    'offerToReceiveAudio':false
+  }};
   	Signaller.on('signal', function(evt, data){
   		try {
   			var peer = WebRTC.getRTC(data.from);
@@ -28,7 +32,7 @@
 
   	function createRTC(user){
   		var ice = [];
-  		var peer = new RTCPeerConnection({'iceServers':[{'urls':'stun:stun.iptel.org'}]});
+  		var peer = new RTCPeerConnection({'iceServers':[{'urls':'stun:stun.iptel.org'}]}, constriant);
       peer.chat = peer.createDataChannel('om-chat');
   		//Must have local stream attached before doing anything
       peer.checkForStream = function(success){
