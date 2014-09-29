@@ -1,32 +1,51 @@
 angular.module('ourMeeting', [])
   .controller('ourMeetingCtrl', ['$scope', '$timeout', '$interval', function($scope, $timeout, $interval) {
     $scope.meeting = {
-      users: []
+      users: [],
+      room: '#1234'
     };
 
     var userCheck = $interval(function() {
       $scope.meeting.users = webrtc.getAllUsers();
-      
-      $scope.meeting.users.forEach(function (id, index) {
-        $scope.attachVideos(id);
-      });
     }, 5000);
 
     $scope.meeting.videos = {};
 
+    webrtc.onLocalStream(function(stream){
+      var elem = document.createElement('video');
+      document.getElementById('whiteboard')
+        .appendChild(elem);
+        attachMediaStream(elem, stream);
 
-    $scope.attachVideos = function(id) {
+    });
 
-      if($scope.meeting.videos[id] === undefined) {
-        var stream = webrtc.getStream(id);
-        if(stream !== undefined && stream !== null) {
-          $scope.meeting.videos[id] = stream;
-          var parent = document.getElementById(id);
-          if (attachMediaStream(parent, stream) === false) {
-            $scope.meeting.videos[id] = undefined;
-          }
-        }
+    webrtc.onRemoteStream(function(stream, id){
+      console.log('remote stream added');
+
+        $scope.attachVideos(stream, id);
+    });
+
+    webrtc.onRemoteStreamRemoval(function(peer){
+      $scope.removeVideo(peer);
+    });
+
+    var rtc = webrtc.RTC();
+    rtc.start(null, function(err, stream){
+      rtc.transport.socket.emit('join', {id:$scope.meeting.room});
+    });
+
+    $scope.attachVideos = function(stream, id) {
+      $scope.meeting.videos[id] = stream;
+      var parent = document.getElementById(id);
+      if (attachMediaStream(parent, stream) === false) {
+        $scope.meeting.videos[id] = undefined;
       }
+    };
+
+    $scope.removeVideos = function(peer){
+      var id = peer.id;
+      var parent = document.getElementById(id);
+      parent.src = "";
     };
 
     $scope.attachToWhiteboard = function (id) {

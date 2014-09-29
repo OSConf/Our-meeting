@@ -17,15 +17,24 @@
     width: 200px;
   }
 
-  .users video {
-    height: 100%;
-    width: 100%;
+  .meeting video {
+    height: 180px;
+    width: 240px;
+    border: 1px solid #00FF00;
+  }
+  #userlist {
+    height:200px;
+    width: 800px;
+    border: 1px solid black;
   }
   </style>
 </head>
-<body ng-app="ourMeeting">
-  <div ng-controller="ourMeetingCtrl">
-    <om-meeting></om-meeting>
+<body>
+  <div class="meeeting">
+    <div id="whiteboard">
+    </div>
+    <div id="userlist"></div>
+    <div id="my-video"></div>
   </div>
 <!--
 <div class="meeting">
@@ -35,16 +44,8 @@
 
 
 <script src="WebRTC/adapter.js"></script>
-<script src="WebRTC/webrtc.js"></script>
-<script src="WebRTC/rtcpeerconnection.js"></script>
-<script src="WebRTC/rtcchat.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-<script src="WebRTC/signalling.js"></script>
-<script src="WebRTC/logic.js"></script>
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular.min.js"></script>
-<script type="text/javascript" src="../client/scripts/directives.js"></script>
-
-
+<script src="WebRTC/logic.bundle.js"></script>
 
 </body>
 </html>
