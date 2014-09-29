@@ -1,13 +1,8 @@
 module.exports = function(grunt){
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
-		//Don't currently need
-		// qunit: {
-		// 	files:['app/**/*.html']
-		// },
-
 		jshint: {
-			files: ['app/**/*.js', 'server/**/*.js', 'Gruntfile.js']
+			files: ['app/**/*.js', '!app/**/*.bundle.js', 'server/**/*.js', 'Gruntfile.js'],
 		},
 
 		watch: {
@@ -64,7 +59,7 @@ module.exports = function(grunt){
 
     concurrent: {
       dev:{
-        tasks:['nodemon', 'node-inspector', 'watch'],
+        tasks:['nodemon', 'node-inspector', 'watch', 'watchify:example'],
         options:{
           logConcurrentOutput: true
         }
@@ -77,11 +72,11 @@ module.exports = function(grunt){
       },
       my_target: {
         files: {
-          'dist/om.min.js': ['dist/om.concat.js']
+          'dist/omapi.min.js': ['dist/ourmeeting.api.js']
         }
       }
     },
-
+    /* Using browserify instead
     concat: {
       options: {
         separator: '',
@@ -90,7 +85,21 @@ module.exports = function(grunt){
         src: ['app/components/WebRTC/webrtc.js', 'app/components/WebRTC/signalling.js', 'app/components/WebRTC/rtcpeerconnection.js', 'app/api/front-end.js', 'app/components/client/scripts/directives.js'],
         dest: 'dist/om.concat.js',
       },
-    },
+    },*/
+
+    watchify: {
+      options:{
+        standalone:'OurMeeting'
+      },
+      dist: {
+        src:'./app/api/front-end.js',
+        dest:'dist/ourmeeting.api.js'
+      },
+      example: {
+        src: './app/components/WebRTC/logic.js',
+        dest:'./app/components/WebRTC/logic.bundle.js'
+      }
+    }
 	});
 
 	grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -102,8 +111,10 @@ module.exports = function(grunt){
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-watchify');
 
-  grunt.registerTask('test', ['jshint', 'mochaTest','watch']);
+  grunt.registerTask('test', ['jshint', /*'mochaTest',*/ 'watchify:dist', 'watch' ]);
+  //Concurent will us watchify:example
   grunt.registerTask('serve', ['concurrent']);
-  grunt.registerTask('build', ['concat', 'uglify']);
+  grunt.registerTask('build', ['test', 'uglify']);
 };
