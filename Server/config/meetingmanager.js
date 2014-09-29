@@ -71,7 +71,7 @@ MeetingManager.prototype.getMeeting = function(id){
   } else {
     //if meeting does not exist, throw error
     if(!this.meetings[id]){
-      throw Error("Meeting not found");
+      //throw Error("Meeting not found");
     //else, return the meeting
     } else {
       return this.meetings[id];

@@ -21,17 +21,24 @@ module.exports = function(server){
     socket.on('user-ready', function(data) {
       //adding username property onto the socket
       username = data.username;
-      //send participant info to user
-      var users = manager.getUser();
-      socket.emit('users', users);
       //adding the user to our meeting manager object
       manager.addUser(username, socket);
-      //send userinfo to each participant
-      var ids = Object.keys(manager.socketIds);
-      for(var i = 0; i < ids.length; i++){
-        socket.broadcast.to(ids[i]).emit('new-user', {username:username});
+
+      //Check if user was invite to any meetings
+      var meetings = manager.checkInvite(username);
+      if(meetings.length > 0){
+        socket.emit('invites', meetings);
       }
     });
+
+    /*
+    socket.on('join', function(data){
+      socket.join(data.room);
+      socket.myroom = data.room;
+      console.log('joined to room', data);
+      socket.broadcast.to(data.room).emit('new-peer', {id:socket.id});
+    });
+    */
 
     //listen for when user disconnect so we can remove them from our users object
     //this still needs work!!!
@@ -39,7 +46,9 @@ module.exports = function(server){
       console.log('user disconnected');
       try {
         var username = manager.getBySocketId(socket.id);
-        socket.emit('user-disconnected', { username: username });
+        socket.broadcast.to(socket.myroom)
+          .emit('peer-disconnect', {id:socket.id});
+
         delete manager.users[username];
         delete manager.socketIds[socket.id];
       } catch(e) {
@@ -113,47 +122,36 @@ module.exports = function(server){
     });
 
     //when client emits join, they will join the room
-    socket.on('join', function(meetingID){
+    socket.on('join', function(room){
+      console.log('received join', room);
       try {
         //check if meeting exist, throws error if not found
-        var meeting = manager.getMeeting(meetingID);
+        var meeting = manager.getMeeting(room.id);
         //if meeting exist then the client will join the room
+
+        /* Currently allowing to join any room name */
+
+        //joining the meeting
+        socket.join(room.id);
         if(meeting){
-          //joining the meeting
-          socket.join(meetingID);
           //adding user to the active user list for the meeting
-          manager.joinMeeting(meetingID, socket.id);
+          manager.joinMeeting(room.id, socket.id);
           //grab active user list for this meeting and send to all users in room
-          var meetingList = manager.getMeetingList(meetingID);
-          managerSpace.to(meetingID).emit('roomList', meetingList);
+          //var meetingList = manager.getMeetingList(room.id);
           socket.emit('join-success');
         }
+        socket.broadcast.to(room.id).emit('new-peer', {id:socket.id});
+
       } catch(e) {
+        console.log(e);
         socket.emit('err', e.message);
       }
     });
 
     //when client emits signal, it will send over evt(event) and data
-    socket.on('signal', function(evt, data){
-      try {
-        var user = data.to;
-        var to = manager.getUser(user);
-        to.emit('signal', evt, data);
-      } catch(e) {
-        socket.emit('err', e.message);
-      }
-    });
-
-    socket.on('handshake', function(evt, data){
-      console.log('handshake', evt, data.Status, data.from);
-      try {
-        var user = data.to;
-        console.log(evt);
-        var to = manager.getUser(user);
-        to.emit('handshake', evt, data);
-      } catch(e) {
-        socket.emit('err', e.message);
-      }
+    socket.on('signal', function(data){
+      console.log(socket.id, 'Forwarding to', data.to);
+      socket.broadcast.to(data.to).emit('signal', {message:data, id:socket.id});
     });
 
   });
