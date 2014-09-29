@@ -32,7 +32,11 @@ function WebRTC(){
 	};
 
 	webrtc.onremotestream = function(peer){
-		webrtc.onRemoteStream(stream, peer.id, peer);
+		var elem = document.createElement('video');
+		elem.autoplay = true;
+		elem.id = peer.id;
+		attachMediaStream(elem, peer.stream);
+		webrtc.onRemoteStream(peer.stream, elem, peer.id, peer);
 	};
 
 	webrtc.onRemoteStreamRemoval = function(callback){

@@ -12,12 +12,12 @@ socket.on('connect', function(){
 socket.on('new-peer', function(){
   console.log('new peer');
 });
-webrtc.start(null, function(err, stream){
+rtc.start(null, function(err, stream){
   rtc.transport.socket.emit('join',{id:1234});
 });
-webrtc.onRemoteStream(function(stream){
-  var elem =document.createElement('video');
-  attachMediaStream(elem, stream);
+
+webrtc.onRemoteStream(function(stream, elem){
+  console.log('Hello, a stream has been added <=============================');
   document.getElementById('userlist')
     .appendChild(elem);
 });

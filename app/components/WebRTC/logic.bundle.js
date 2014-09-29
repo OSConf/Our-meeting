@@ -703,9 +703,9 @@ socket.on('new-peer', function(){
 rtc.start(null, function(err, stream){
   rtc.transport.socket.emit('join',{id:1234});
 });
-webrtc.onRemoteStream(function(stream){
-  var elem =document.createElement('video');
-  attachMediaStream(elem, stream);
+
+webrtc.onRemoteStream(function(stream, elem){
+  console.log('Hello, a stream has been added <=============================');
   document.getElementById('userlist')
     .appendChild(elem);
 });
@@ -797,7 +797,11 @@ function WebRTC(){
 	};
 
 	webrtc.onremotestream = function(peer){
-		webrtc.onRemoteStream(stream, peer.id, peer);
+		var elem = document.createElement('video');
+		elem.autoplay = true;
+		elem.id = peer.id;
+		attachMediaStream(elem, peer.stream);
+		webrtc.onRemoteStream(peer.stream, elem, peer.id, peer);
 	};
 
 	webrtc.onRemoteStreamRemoval = function(callback){
