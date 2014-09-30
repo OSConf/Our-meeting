@@ -13,6 +13,9 @@ socket.on('new-peer', function(){
   console.log('new peer');
 });
 rtc.start(null, function(err, stream){
+  var elem = document.querySelector('#my-video > video');
+  elem.hidden = false;
+  attachMediaStream(elem, stream);
   rtc.transport.socket.emit('join',{id:1234});
 });
 

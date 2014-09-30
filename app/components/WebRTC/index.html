@@ -16,7 +16,7 @@
       margin: 0 3px;
     }
 
-    #userlist video {
+    #userlist video, #my-video video {
       height: 125px;
       border: 1px solid #00FF00;
       margin: 3px;
@@ -42,13 +42,19 @@
       border: 1px solid black;
       padding-top: 3px;
     }
+
+    #my-video {
+      float:right;
+    }
   </style>
 </head>
 <body>
   <div class="meeeting">
     <div id="whiteboard"></div>
     <div id="userlist"></div>
-    <div id="my-video"></div>
+    <div id="my-video">
+      <video autoplay muted hidden></video>
+    </div>
   </div>
 <!--
 <div class="meeting">
@@ -58,7 +64,7 @@
 
 <script type="text/javascript">
   var elem;
-  document.addEventListener("click", function(event) {
+  document.getElementById('userlist').addEventListener("click", function(event) {
     // retrieve an event if it was called manually
     event = event || window.event;
 
