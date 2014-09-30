@@ -3,30 +3,41 @@
 <head>
   <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
   <style type="text/css">
+    html, 
+    body { 
+      height: 100%;
+      margin: 0;
+    }
+
     .meeting {
       position: relative;
+      height: 100%;
     }
+
     #whiteboard {
-      border: 1px solid red;
       padding-top: 3px;
       display: inline-block;
+      background-color: #111;
+      width: 100%;
+      /*height: 80%;*/
     }
 
     #whiteboard video {
-      margin: 0 3px;
+      margin: 0 auto;
+      display: block;
     }
 
-    #userlist video, #my-video video {
+    #userlist video {
       height: 125px;
       border: 1px solid #00FF00;
       margin: 3px;
     }
 
-    #userlist div {
+    .user-div {
       height: 125px;
       width: 167px;
-      border: 1px solid darkgrey;
       margin: 3px;
+      border: 1px solid darkgrey;
       display: inline-block;
       text-align: center;
       background-color: #111;
@@ -37,23 +48,27 @@
     #userlist {
       position: absolute;
       bottom: 0;
-      left: 0;
       display: inline-block;
-      border: 1px solid black;
+      
       padding-top: 3px;
     }
 
     #my-video {
-      float:right;
+      display: inline-block;
+    }
+
+    #my-video video {
+      border: 1px solid red;
     }
   </style>
 </head>
 <body>
-  <div class="meeeting">
+  <div class="meeting">
     <div id="whiteboard"></div>
-    <div id="userlist"></div>
-    <div id="my-video">
-      <video autoplay muted hidden></video>
+    <div id="userlist">
+      <div id="my-video">
+        <video autoplay muted hidden></video>
+      </div>
     </div>
   </div>
 <!--
@@ -63,19 +78,30 @@
 </div> -->
 
 <script type="text/javascript">
-  var elem;
-  document.getElementById('userlist').addEventListener("click", function(event) {
+  window.onresize = function() {
+    var whiteboard = document.getElementById('whiteboard');
+    var meeting = document.getElementsByClassName('meeting')[0];
+
+      if (whiteboard.childNodes.length > 0) {
+        whiteboard.childNodes[0].style.height = (meeting.clientHeight - 146) + 'px';
+      }
+
+    document.getElementById('whiteboard').style.height = (meeting.clientHeight - 143) + 'px';
+  };
+
+  document.getElementById('userlist').addEventListener('click', function(event) {
+    var meeting = document.getElementsByClassName('meeting')[0];
+
     // retrieve an event if it was called manually
     event = event || window.event;
 
     // retrieve the related element
-    el = event.target || event.srcElement;
+    var el = event.target || event.srcElement;
 
-    if (el.tagName === 'VIDEO') {
+    if (el.tagName === 'VIDEO' && el.parentNode.id !== 'my-video') {
       // Create temp element to hold video location and inner text
       var holder = document.createElement('div');
-      var text = document.createElement('span');
-      holder.className = el.id;
+      holder.className = el.id + ' user-div';
       //holder.innerText = el.id; //Messes everything up for some reason
 
       el.parentNode.insertBefore(holder, el);
@@ -83,18 +109,21 @@
       var whiteboard = document.getElementById('whiteboard');
 
       if (whiteboard.childNodes.length > 0) {
-        var old_video = whiteboard.childNodes[0];
-        var elem = document.getElementsByClassName(old_video.id)[0];
-        elem.parentNode.insertBefore(old_video, elem);
-        old_video.play();
+        whiteboard.childNodes[0].style.height = '125px';
+        var oldVideo = whiteboard.childNodes[0];
+        var elem = document.getElementsByClassName(oldVideo.id)[0];
+        elem.parentNode.insertBefore(oldVideo, elem);
+        oldVideo.play();
         elem.parentNode.removeChild(elem);
       }
 
       //whiteboard.innerHTML = '';
       whiteboard.appendChild(el);
       whiteboard.childNodes[0].play();
+      whiteboard.childNodes[0].style.height = (meeting.clientHeight - 146) + 'px';
     }
 }, false);
+
 </script>
 <script src="WebRTC/adapter.js"></script>
 <script src="/socket.io/socket.io.js"></script>
