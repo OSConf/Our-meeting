@@ -1,6 +1,3 @@
-var _ = require('lodash');
-
-
 function Admin(signaller){
   var admin = {};
 
@@ -24,7 +21,7 @@ function Admin(signaller){
       onReply(success, 'add', data);
     });
     signaller.on('add-error', function(data){
-      onReply(success, 'add', data);
+      onReply(failure, 'add', data);
     });
   };
 
@@ -36,7 +33,7 @@ function Admin(signaller){
       onReply(success, 'remove', data);
     });
     signaller.on('remove-error', function(data){
-      onReply(success, 'remove', data);
+      onReply(failure, 'remove', data);
     });
   };
 
