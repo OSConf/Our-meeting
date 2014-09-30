@@ -11,22 +11,30 @@
  > General whiteboard related functions
  
  * insert
+
    > Inserts input (dom node) into the whiteboard div.
    > Checks to see if the whiteboard contains something, if so puts it back where it belongs.
 
 #### Current User
+
  > Functions related to the user who is logged in
  
  * joinMeeting
    > Checks to see if current user can join the given meetingID. If so connects them to that meeting.
+
  * checkInvitations
    > Returns list of all meetings user has been invited to.
+
  * userName
    > Returns current username.
+
  * getStreams
    > Returns an object with a parameters with all the streams
+
  * leaveRoom
+ 
    > Signals that the user has left the meeting
+
    > Will close the room if user is last leaving
 
 #### Meeting

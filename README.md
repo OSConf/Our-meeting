@@ -5,8 +5,7 @@
 
 ## Team
 
-  - __Product Owner__: Gabar Ewen
-  - __Scrum Master__: Gabar Ewen
+  - __Project Manager__: Gabar Ewen
   - __Development Team Members__: Huy Pham, Justin Cruz
 
 ## Table of Contents
@@ -21,17 +20,17 @@
 
 ## Usage
 
-> TBD
+### Quick start
 
+ > Check back later, for now take a look app/components/WebRTC/logic.js
+ 
+### API DOCS
+ API info can be found [here](app/api/readme.md)
+     
 ## Requirements
 
-TBD
-
-- Node 0.10.x
-- Redis 2.6.x
-- Postgresql 9.1.x
-- etc
-- etc
+- Browser with support for WebRTC
+- Socket.io if using default configs
 
 ## Development
 
@@ -40,9 +39,7 @@ TBD
 From within the root directory:
 
 ```sh
-sudo npm install -g bower
 npm install
-bower install
 ```
 
 ### Roadmap
