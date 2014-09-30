@@ -1,38 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
   <style type="text/css">
-  om-users, om-whiteboard {
-    float: left;
-  }
+    .meeting {
+      position: relative;
+    }
+    #whiteboard {
+      border: 1px solid red;
+      padding-top: 3px;
+      display: inline-block;
+    }
 
-  .users {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-  }
+    #whiteboard video {
+      margin: 0 3px;
+    }
 
-  .users li {
-    height: 150px;
-    width: 200px;
-  }
+    #userlist video {
+      height: 125px;
+      border: 1px solid #00FF00;
+      margin: 3px;
+    }
 
-  .meeting video {
-    height: 180px;
-    width: 240px;
-    border: 1px solid #00FF00;
-  }
-  #userlist {
-    height:200px;
-    width: 800px;
-    border: 1px solid black;
-  }
+    #userlist div {
+      height: 125px;
+      width: 167px;
+      border: 1px solid darkgrey;
+      margin: 3px;
+      display: inline-block;
+      text-align: center;
+      background-color: #111;
+      color: white;
+      font-size: 1em;
+    }
+
+    #userlist {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      display: inline-block;
+      border: 1px solid black;
+      padding-top: 3px;
+    }
   </style>
 </head>
 <body>
   <div class="meeeting">
-    <div id="whiteboard">
-    </div>
+    <div id="whiteboard"></div>
     <div id="userlist"></div>
     <div id="my-video"></div>
   </div>
@@ -42,7 +56,40 @@
   <video id="me" autoplay style="float:left;"></video>
 </div> -->
 
+<script type="text/javascript">
+  var elem;
+  document.addEventListener("click", function(event) {
+    // retrieve an event if it was called manually
+    event = event || window.event;
 
+    // retrieve the related element
+    el = event.target || event.srcElement;
+
+    if (el.tagName === 'VIDEO') {
+      // Create temp element to hold video location and inner text
+      var holder = document.createElement('div');
+      var text = document.createElement('span');
+      holder.className = el.id;
+      //holder.innerText = el.id; //Messes everything up for some reason
+
+      el.parentNode.insertBefore(holder, el);
+
+      var whiteboard = document.getElementById('whiteboard');
+
+      if (whiteboard.childNodes.length > 0) {
+        var old_video = whiteboard.childNodes[0];
+        var elem = document.getElementsByClassName(old_video.id)[0];
+        elem.parentNode.insertBefore(old_video, elem);
+        old_video.play();
+        elem.parentNode.removeChild(elem);
+      }
+
+      //whiteboard.innerHTML = '';
+      whiteboard.appendChild(el);
+      whiteboard.childNodes[0].play();
+    }
+}, false);
+</script>
 <script src="WebRTC/adapter.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="WebRTC/logic.bundle.js"></script>
