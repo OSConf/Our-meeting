@@ -98,6 +98,10 @@ module.exports = function(grunt){
       example: {
         src: './app/components/WebRTC/logic.js',
         dest:'./app/components/WebRTC/logic.bundle.js'
+      },
+      noapi: {
+        src:'./app/components/WebRTC/peer.js',
+        dest: 'dist/noapi.bundle.js'
       }
     }
 	});
@@ -117,4 +121,5 @@ module.exports = function(grunt){
   //Concurent will us watchify:example
   grunt.registerTask('serve', ['concurrent']);
   grunt.registerTask('build', ['test', 'uglify']);
+  grunt.registerTask('noapi', ['watchify:noapi']);
 };
