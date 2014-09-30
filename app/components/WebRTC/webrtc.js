@@ -33,6 +33,9 @@ function WebRTC(){
 
 	webrtc.onremotestream = function(peer){
 		var elem = document.createElement('video');
+		elem.addEventListener('click', function() {
+			console.log(this);
+		}, false);
 		elem.autoplay = true;
 		elem.id = peer.id;
 		attachMediaStream(elem, peer.stream);
