@@ -3,8 +3,7 @@ var webrtc = require('../components/WebRTC/peer');
 var RTC = webrtc.RTC();
 var signaller = RTC.transport;
 var Admin = require('../components/admin/admin.js')(signaller);
-
-module.exports = ourMeeting;
+var socket = rtc.transport.socket;
 
 var Streams = function() {};
 
@@ -24,32 +23,29 @@ ourMeeting.prototype.whiteboard = {
   }
 };
 
-ourMeeting.prototype.meeting = function(){
+var Meeting = function(meetingID){
+  var meeting = {};
 
+  Admin.getMeeting(meetingID, function(data){
+    if(meetingID === data.id){
+      meeting.id = meetingID;
+      meeting.invitees = data.meetInvitees;
+      meeting.users = WebRTC.getAllUsers();
+    }
+  });
+
+  meeting.getID = function(){
+    return this.meeting.id;
+  };
+  meeting.invitedUser = function(){
+    return this.meeting.invitees;
+  };
+  meeting.connectedUsers = function(){
+    return this.meeting.users;
+  };
+
+  return meeting;
 };
-
-/*{
-  getMeeting: function(meetingID) {
-    Admin.getMeeting(meetingID, function(data){
-      console.log(data);
-      //data is an object with properties: id, meetUsers, meetInvitees
-      //if meetingID is not passed in, data is an array of meeting names
-    });
-  },
-  invitedUsers: function(meetingID) {
-    //should be on admin
-  },
-  connectedUsers: function(meetingID) {
-    //list of current connected users
-  },
-  sendMessage: function(message, meetingID) {
-
-  },
-  retreiveMessages: function(meetingID) {
-
-  }
-};
-*/
 
 ourMeeting.prototype.admin = {
   createMeeting: function() {
@@ -80,7 +76,7 @@ ourMeeting.prototype.currentUser = function(username, id){
       me.streams = streams;
       signaller.send("join", {id: meetingID});
     });
-    return self.meeting(meetingID);
+    self.meeting = new Meeting(meetingID);
   };
   me.checkInvites = function(){
     signaller.send("check-invite");
@@ -92,8 +88,4 @@ ourMeeting.prototype.currentUser = function(username, id){
   return me;
 };
 
-/*
-  class meeting:
-    room id
-    connected users
-*/
+module.exports = ourMeeting;

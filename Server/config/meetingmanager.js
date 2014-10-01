@@ -67,7 +67,8 @@ MeetingManager.prototype.removeMeeting = function(id){
 MeetingManager.prototype.getMeeting = function(id){
   //if id is not passed in, return all meetings
   if(id===undefined){
-    return Object.keys(this.meetings);
+    var meetings = Object.keys(this.meetings);
+    return { meetings: meetings };
   } else {
     //if meeting does not exist, throw error
     if(!this.meetings[id]){
