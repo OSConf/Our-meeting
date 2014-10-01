@@ -101,7 +101,8 @@
     }
 
     if ((whiteboard.clientWidth / whiteboard.clientHeight) < ratio) {
-      whiteboard.childNodes[0].style.height = whiteboard.clientWidth * ratio;
+      // height = (3 * width) / 4 /* keeps the video at a 4:3 ratio */
+      whiteboard.childNodes[0].style.height = (3 * whiteboard.clientWidth) / 4;
     }
 
     document.getElementById('whiteboard').style.height = (meeting.clientHeight - 143) + 'px';
