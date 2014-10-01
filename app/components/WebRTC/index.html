@@ -60,9 +60,21 @@
     #my-video video {
       border: 1px solid red;
     }
+    .menu {
+      margin: 10px 10px;
+    }
   </style>
 </head>
 <body>
+  <div class="info">
+    <form method="GET" action="index.html">
+      <input name="id" id="id"/>
+      <button type="submit">Join Room</button>
+    </form>
+    <a href="index.html?id=HelloWorld" class="menu"> Hello World Room </a>
+    <a href="index.html?id=WebRTC" class="menu">WebRTC Chat</a>
+  </div>
+
   <div class="meeting">
     <div id="whiteboard"></div>
     <div id="userlist">
