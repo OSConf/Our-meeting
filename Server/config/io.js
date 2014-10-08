@@ -1,7 +1,7 @@
 //Define socket.io handlers here
 module.exports = function(server){
   var io = require('socket.io')(server);
-  var MeetingManger = require('./meetingmanager');
+  var MeetingManger = require('./meetingmanager.js');
   var manager = new MeetingManger();
 
   //on connection...
@@ -79,8 +79,9 @@ module.exports = function(server){
     //when client emits get, client send over nothing or meeting name/id
     socket.on('get', function(id){
       try {
+        console.log(manager.getMeeting(id));
         //it will get all meetings or specific meetings from the meeting manager
-        socket.emit('get-success', manager.getMeeting(id) );
+        socket.emit('get-success', manager.getMeeting(id));
       } catch(e) {
         socket.emit('get-error', e.message);
       }
@@ -106,6 +107,7 @@ module.exports = function(server){
         manager.alertInvite(usernames);
         socket.emit('invite-user-success');
       } catch(e) {
+        console.log(e);
         socket.emit('invite-user-error', e.message);
       }
     });

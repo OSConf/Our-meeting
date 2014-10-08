@@ -1,9 +1,165 @@
 !function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.OurMeeting=e():"undefined"!=typeof global?global.OurMeeting=e():"undefined"!=typeof self&&(self.OurMeeting=e())}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var client = io({url:'http://localhost'});
-var webrtc = require('./peer.js');
-var rtc = webrtc.RTC();
-var signaller = rtc.signaller;
-var socket = rtc.transport.socket;
+// Load webrtc here
+var webrtc = require('../components/WebRTC/peer');
+var RTC = webrtc.RTC();
+var signaller = RTC.transport;
+var Admin = require('../components/admin/admin.js')(signaller);
+var socket = RTC.transport.socket;
+
+//var Streams = function() {};
+
+var User = function(username, id) {
+  this.username = username;
+  this.id = id;
+  this.streams = null;
+};
+
+var Meeting = function(meetingID){
+  var meeting = {};
+
+  Admin.getMeeting(meetingID, function(data){
+    if(meetingID === data.id){
+      meeting.id = meetingID;
+      meeting.invitees = data.meetInvitees;
+      meeting.users = WebRTC.getAllUsers();
+    }
+  });
+
+  meeting.getID = function(){
+    return this.meeting.id;
+  };
+  meeting.invitedUser = function(){
+    return this.meeting.invitees;
+  };
+  meeting.connectedUsers = function(){
+    return this.meeting.users;
+  };
+
+  return meeting;
+};
+
+var ourMeeting = function(options) {
+  /* Statics */
+  this.whiteboardNode = options.whiteboard || null;
+};
+
+ourMeeting.prototype.whiteboard = {
+  insert: function(node) {
+    this.whiteboardNode.appendChild(node);
+  }
+};
+
+ourMeeting.prototype.admin = {
+  createMeeting: function(userList, callback) {
+    callback = callback || function() {};
+
+    Admin.addMeeting(undefined,
+      // Success function
+      function(data) {
+        console.log('Meeting created with ID ' + data);
+        callback(data, userList);
+      },
+      // Failure function
+      function() {
+        console.log('Failed to create meeting');
+      }
+    );
+  },
+  openMeetings: function(callback) {
+    callback = callback || function() {};
+
+    Admin.getMeeting(undefined,
+      // Success function
+      function(data) {
+        console.log('Meetings retrieved');
+        console.log(data.meetings);
+        callback(data.meetings);
+      },
+      // Failure function
+      function() {
+        console.log('Meetings retrieval failed');
+      }
+    );
+  },
+  findUser: function(userID, callback) { 
+    callback = callback || function() {};
+
+    Admin.getMeeting(undefined,
+      // Success function
+      function(data) {
+        console.log('User meeting(s) retreived');
+        var connectedMeetings = [];
+
+        data.meetings.forEach(function(meeting) {
+          var users = meeting.connectedUsers();
+
+          for (var i = 0; i < users.length; i++) {
+            if (users[i].id === userID) {
+              connectedMeetings.push(meeting);
+            }
+          }
+        });
+      },
+      // Failure function
+      function() {
+        console.log('Meetings retrieval failed');
+      }
+    );
+  },
+  inviteUsers: function(meetingID, userList) {
+    Admin.inviteUser(meetingID, userList,
+      // Success function
+      function() {
+        console.log('Users ' + userList.toString() + ' invited to meeting ' + meetingID);
+      },
+      // Failure function
+      function() {
+        console.log('Failed to invite users');
+      });
+  },
+
+  // Admin remove meeting function that attempts to remove the given meeting
+  closeMeeting: function(meetingID) {
+    Admin.removeMeeting(meetingID,
+      // Success function
+      function(data) {
+        console.log('Meeting ' + meetingID + ' closed.');
+        console.log(data);
+      },
+      // Failure function
+      function(data) {
+        console.log('Meeting ' + meetingID + ' failed to close. (May not exist)');
+        console.log(data);
+      }
+    );
+  }
+};
+
+ourMeeting.prototype.currentUser = function(username, id){
+  var me = new User(username, id);
+  var self = this;
+  //should *always* listen for 'inviteList' to get list of rooms
+  signaller.on('inviteList', function(data){
+    //data = array of meeting names
+    console.log(data);
+  });
+  //get method which create a users in this scope instansiate new CurrentUsers, occurs once
+  me.joinMeeting = function(meetingID){
+    RTC.start(null, function(err, streams){
+      me.streams = streams;
+      signaller.send('join', {id: meetingID});
+    });
+    self.meeting = new Meeting(meetingID);
+  };
+  me.checkInvites = function(){
+    signaller.send('check-invite');
+  };
+  me.name = me.username || me.id;
+  me.getStreams = function(){
+    return this.streams;
+  };
+  return me;
+};
 
 var user = Math.floor(Math.random()*25);
 //register self
@@ -13,11 +169,11 @@ socket.on('connect', function(){
 socket.on('new-peer', function(){
   console.log('new peer');
 });
-rtc.start(null, function(err, stream){
+RTC.start(null, function(err, stream){
   var elem = document.querySelector('#my-video > video');
   elem.hidden = false;
   attachMediaStream(elem, stream);
-  rtc.transport.socket.emit('join',{id:1234});
+  RTC.transport.socket.emit('join',{id:1234});
 });
 
 webrtc.onRemoteStream(function(stream, elem){
@@ -26,8 +182,13 @@ webrtc.onRemoteStream(function(stream, elem){
     .appendChild(elem);
 });
 
-module.exports = webrtc;
-},{"./peer.js":2}],2:[function(require,module,exports){
+module.exports = ourMeeting;
+},{"../components/WebRTC/peer":3,"../components/admin/admin.js":6}],2:[function(require,module,exports){
+var client = io({url:'http://localhost'});
+var ourmeeting = require('../../api/front-end.js');
+
+module.exports = ourmeeting;
+},{"../../api/front-end.js":1}],3:[function(require,module,exports){
 var WebRTC = require('om-webrtc');
 var Signaller = require('./signalling.js')();
 var rtcman = require('./webrtc.js')();
@@ -57,9 +218,11 @@ config.streamConfig = {
     rtcman.onremotestreamremoval(peer);
   }
 };
+
 rtcman.setRTC(new WebRTC(config));
+
 module.exports = rtcman;
-},{"./signalling.js":3,"./webrtc.js":4,"om-webrtc":9}],3:[function(require,module,exports){
+},{"./signalling.js":4,"./webrtc.js":5,"om-webrtc":11}],4:[function(require,module,exports){
 function Signaller(){
   var socket = io.connect('/manager');
   socket.on('error', function(err){
@@ -67,10 +230,11 @@ function Signaller(){
   });
 
 	return {
-    socket:socket,
-		send: function(evt, data){
-      socket.emit(evt, data);
-		},
+    socket: socket,
+		send: function(){
+      var args = Array.prototype.slice.call(arguments);
+      socket.emit.apply(socket, args);
+    },
 		receive: function(evt, callback){
 			socket.on(evt, callback);
 		},
@@ -84,7 +248,7 @@ function Signaller(){
 }
 
 module.exports = Signaller;
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 //User a function to make this easily adaptable to angular
 function WebRTC(){
 	var webrtc = {};
@@ -185,7 +349,93 @@ function WebRTC(){
 	return webrtc;
 }
 module.exports = WebRTC;
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
+function Admin(signaller){
+  var admin = {};
+
+  //helper function to take care of turning off success and error listener
+  //and taking in either a success or failure callback to process the data
+  function onReply(callback, evt, data){
+    if(evt){
+      signaller.off(evt+'-success');
+      signaller.off(evt+'-error');
+    }
+    if( typeof callback === 'function'){
+      callback(data);
+    }
+  }
+
+  admin.addMeeting = function(meetingID, success, failure){
+    //emits 'add', passing meetingID over
+    signaller.send('add', meetingID);
+    //nothing special, listens for 'success' and return ID back
+    signaller.on('add-success', function(data){
+      onReply(success, 'add', data);
+    });
+    signaller.on('add-error', function(data){
+      onReply(failure, 'add', data);
+    });
+  };
+
+  admin.removeMeeting = function(meetingID, success, failure){
+    //emits 'remove', passing meetingID over
+    signaller.send('remove', meetingID);
+    //nothing special, listens for 'success' and return ID back
+    signaller.on('remove-success', function(data){
+      onReply(success, 'remove', data);
+    });
+    signaller.on('remove-error', function(data){
+      onReply(failure, 'remove', data);
+    });
+  };
+
+  admin.getMeeting = function(meetingID, success, failure){
+    //emits 'get', passing meetingID over to get a specific meeting info
+    //if nothing is passed in, a list of all meetings will be returned as an array
+    signaller.send('get', meetingID);
+    //listens for 'get-success' on return data, type of data = list of all meetings or a specific meeting object
+    signaller.on('get-success', function(data){
+      onReply(success, 'get', data);
+    });
+    signaller.on('get-error', function(data){
+      onReply(failure, 'get', data);
+    });
+  };
+
+  //ex. admin.inviteUser("myroom", ["john","sally"])
+  admin.inviteUser = function(meetingID, usernames, success, failure){
+    console.log('adminfunction:', usernames);
+    //emits 'invite-user', passing in meetingID and an array of users to be invited
+    signaller.send('invite-user', meetingID, usernames);
+    signaller.on('invite-user-success', function(){
+      onReply(success, 'invite-user');
+    });
+    signaller.on('invite-user-error', function(){
+      onReply(failure, 'invite-user');
+    });
+    //server will also emit 'inviteList' to clients that were invited who are online
+    //client should listen for 'inviteList' to be alerted that they are invited
+  };
+
+  admin.getUser = function(username, success, failure){
+    //emits 'get-user', passing in a username to get a specific user's socket info
+    //if nothing is passed in, a list of all users will be returned as an array
+    signaller.send('get-user', username);
+    //listens for 'user' on return data, data = list of all users or a specific user's socket
+    signaller.on('get-user-success', function(data){
+      onReply(sucess, 'get-user', data);
+    });
+    signaller.on('get-user-error', function(data){
+      onReply(failure, 'get-user', data);
+    });
+  };
+
+  return admin;
+}
+
+module.exports = Admin;
+
+},{}],7:[function(require,module,exports){
 
 
 //
@@ -403,7 +653,7 @@ if (typeof Object.getOwnPropertyDescriptor === 'function') {
   exports.getOwnPropertyDescriptor = valueObject;
 }
 
-},{}],6:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -948,7 +1198,7 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-},{"_shims":5}],7:[function(require,module,exports){
+},{"_shims":7}],9:[function(require,module,exports){
 /*
   All Events
 */
@@ -1002,7 +1252,7 @@ Logger.prototype.checkEvent = function(evt){
 };
 
 module.exports = Logger;
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 //Custom configurations go here
 
 //PeerConnection config
@@ -1056,9 +1306,9 @@ module.exports.webrtcConfig = {};
 //What to do when a new stream is received
 //Should have properties onLocalStream, onRemoveLocalStream, onRemoteStream, onRemoveRemoteStream
 module.exports.streamsConfig = {};
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 module.exports = require('./wrtclib');
-},{"./wrtclib":29}],10:[function(require,module,exports){
+},{"./wrtclib":31}],12:[function(require,module,exports){
 var util = require('util');
 var hark = require('hark');
 var webrtc = require('webrtcsupport');
@@ -1336,7 +1586,7 @@ Object.defineProperty(LocalMedia.prototype, 'localScreen', {
 
 module.exports = LocalMedia;
 
-},{"getscreenmedia":11,"getusermedia":12,"hark":13,"mediastream-gain":14,"mockconsole":16,"util":6,"webrtcsupport":25,"wildemitter":26}],11:[function(require,module,exports){
+},{"getscreenmedia":13,"getusermedia":14,"hark":15,"mediastream-gain":16,"mockconsole":18,"util":8,"webrtcsupport":27,"wildemitter":28}],13:[function(require,module,exports){
 // getScreenMedia helper by @HenrikJoreteg
 var getUserMedia = require('getusermedia');
 
@@ -1452,7 +1702,7 @@ window.addEventListener('message', function (event) {
     }
 });
 
-},{"getusermedia":12}],12:[function(require,module,exports){
+},{"getusermedia":14}],14:[function(require,module,exports){
 // getUserMedia helper by @HenrikJoreteg
 var func = (window.navigator.getUserMedia ||
             window.navigator.webkitGetUserMedia ||
@@ -1520,7 +1770,7 @@ module.exports = function (constraints, cb) {
     });
 };
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var WildEmitter = require('wildemitter');
 
 function getMaxVolume (analyser, fftBins) {
@@ -1650,7 +1900,7 @@ module.exports = function(stream, options) {
   return harker;
 }
 
-},{"wildemitter":26}],14:[function(require,module,exports){
+},{"wildemitter":28}],16:[function(require,module,exports){
 var support = require('webrtcsupport');
 
 
@@ -1697,7 +1947,7 @@ GainController.prototype.on = function () {
 
 module.exports = GainController;
 
-},{"webrtcsupport":15}],15:[function(require,module,exports){
+},{"webrtcsupport":17}],17:[function(require,module,exports){
 // created by @HenrikJoreteg
 var prefix;
 var isChrome = false;
@@ -1735,7 +1985,7 @@ module.exports = {
     IceCandidate: IceCandidate
 };
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var methods = "assert,count,debug,dir,dirxml,error,exception,group,groupCollapsed,groupEnd,info,log,markTimeline,profile,profileEnd,time,timeEnd,trace,warn".split(",");
 var l = methods.length;
 var fn = function () {};
@@ -1747,7 +1997,7 @@ while (l--) {
 
 module.exports = mockconsole;
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 var tosdp = require('./lib/tosdp');
 var tojson = require('./lib/tojson');
 
@@ -1760,7 +2010,7 @@ exports.toSessionJSON = tojson.toSessionJSON;
 exports.toMediaJSON = tojson.toMediaJSON;
 exports.toCandidateJSON = tojson.toCandidateJSON;
 
-},{"./lib/tojson":19,"./lib/tosdp":20}],18:[function(require,module,exports){
+},{"./lib/tojson":21,"./lib/tosdp":22}],20:[function(require,module,exports){
 exports.lines = function (sdp) {
     return sdp.split('\r\n').filter(function (line) {
         return line.length > 0;
@@ -2021,7 +2271,7 @@ exports.bandwidth = function (line) {
     return parsed;
 };
 
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 var parsers = require('./parsers');
 var idCounter = Math.random();
 
@@ -2211,7 +2461,7 @@ exports.toCandidateJSON = function (line) {
     return candidate;
 };
 
-},{"./parsers":18}],20:[function(require,module,exports){
+},{"./parsers":20}],22:[function(require,module,exports){
 var senders = {
     'initiator': 'sendonly',
     'responder': 'recvonly',
@@ -2425,7 +2675,7 @@ exports.toCandidateSDP = function (candidate) {
     return 'a=candidate:' + sdp.join(' ');
 };
 
-},{}],21:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 // based on https://github.com/ESTOS/strophe.jingle/
 // adds wildemitter support
 var util = require('util');
@@ -2645,9 +2895,9 @@ TraceablePeerConnection.prototype.getStats = function (callback, errback) {
 
 module.exports = TraceablePeerConnection;
 
-},{"util":6,"webrtcsupport":22,"wildemitter":26}],22:[function(require,module,exports){
-module.exports=require(15)
-},{}],23:[function(require,module,exports){
+},{"util":8,"webrtcsupport":24,"wildemitter":28}],24:[function(require,module,exports){
+module.exports=require(17)
+},{}],25:[function(require,module,exports){
 //     Underscore.js 1.7.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -4064,7 +4314,7 @@ module.exports=require(15)
   }
 }.call(this));
 
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 var _ = require('underscore');
 var util = require('util');
 var webrtc = require('webrtcsupport');
@@ -4528,7 +4778,7 @@ PeerConnection.prototype.getStats = function (cb) {
 
 module.exports = PeerConnection;
 
-},{"sdp-jingle-json":17,"traceablepeerconnection":21,"underscore":23,"util":6,"webrtcsupport":25,"wildemitter":26}],25:[function(require,module,exports){
+},{"sdp-jingle-json":19,"traceablepeerconnection":23,"underscore":25,"util":8,"webrtcsupport":27,"wildemitter":28}],27:[function(require,module,exports){
 // created by @HenrikJoreteg
 var prefix;
 var isChrome = false;
@@ -4569,7 +4819,7 @@ module.exports = {
     MediaStream: MediaStream
 };
 
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*
 WildEmitter.js is a slim little event emitter by @henrikjoreteg largely based 
 on @visionmedia's Emitter from UI Kit.
@@ -4710,7 +4960,7 @@ WildEmitter.prototype.getWildcardCallbacks = function (eventName) {
     return result;
 };
 
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var util = require('util');
 var webrtc = require('webrtcsupport');
 var PeerConnection = require('rtcpeerconnection');
@@ -4923,7 +5173,7 @@ Peer.prototype.handleDataChannelAdded = function (channel) {
 
 module.exports = Peer;
 
-},{"rtcpeerconnection":24,"util":6,"webrtcsupport":25,"wildemitter":26}],28:[function(require,module,exports){
+},{"rtcpeerconnection":26,"util":8,"webrtcsupport":27,"wildemitter":28}],30:[function(require,module,exports){
 var util = require('util');
 var webrtc = require('webrtcsupport');
 var WildEmitter = require('wildemitter');
@@ -5088,7 +5338,7 @@ WebRTC.prototype.sendDirectlyToAll = function (channel, message, payload) {
 
 module.exports = WebRTC;
 
-},{"./peer":27,"localmedia":10,"mockconsole":16,"util":6,"webrtcsupport":25,"wildemitter":26}],29:[function(require,module,exports){
+},{"./peer":29,"localmedia":12,"mockconsole":18,"util":8,"webrtcsupport":27,"wildemitter":28}],31:[function(require,module,exports){
 var config = require('./configs');
 var Logger = require('./Logger');
 var WebRTC = require('webrtc');
@@ -5277,7 +5527,7 @@ function Rtclib(client, config){
   return wrtc;
 }
 
-},{"./Logger":7,"./configs":8,"webrtc":28}]},{},[1])
-(1)
+},{"./Logger":9,"./configs":10,"webrtc":30}]},{},[2])
+(2)
 });
 ;

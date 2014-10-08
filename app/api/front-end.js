@@ -3,9 +3,9 @@ var webrtc = require('../components/WebRTC/peer');
 var RTC = webrtc.RTC();
 var signaller = RTC.transport;
 var Admin = require('../components/admin/admin.js')(signaller);
-var socket = rtc.transport.socket;
+var socket = RTC.transport.socket;
 
-var Streams = function() {};
+//var Streams = function() {};
 
 var User = function(username, id) {
   this.username = username;
@@ -39,7 +39,7 @@ var Meeting = function(meetingID){
 
 var ourMeeting = function(options) {
   /* Statics */
-  this.whiteboardNode = options.whiteboard;
+  this.whiteboardNode = options.whiteboard || null;
 };
 
 ourMeeting.prototype.whiteboard = {
@@ -49,59 +49,76 @@ ourMeeting.prototype.whiteboard = {
 };
 
 ourMeeting.prototype.admin = {
-  createMeeting: function() {
-    var meetingID;
+  createMeeting: function(userList, callback) {
+    callback = callback || function() {};
 
     Admin.addMeeting(undefined,
       // Success function
       function(data) {
-        console.log('Meeting created with ID' + data.id); // or just data
-        meetingID = data.id;
+        console.log('Meeting created with ID ' + data);
+        callback(data, userList);
       },
       // Failure function
-      function(data) {
-        console.log(data);
-        meetingID = this.createMeeting();
+      function() {
+        console.log('Failed to create meeting');
       }
     );
-
-    return meetingID;
   },
-  openMeetings: function() {
-    var meetings;
+  openMeetings: function(callback) {
+    callback = callback || function() {};
 
     Admin.getMeeting(undefined,
       // Success function
       function(data) {
         console.log('Meetings retrieved');
-        console.log(data);
-        meetings = data;
+        console.log(data.meetings);
+        callback(data.meetings);
       },
       // Failure function
-      function(data) {
+      function() {
         console.log('Meetings retrieval failed');
-        console.log(data);
       }
     );
-
-    return meetings;
   },
-  findUser: function(userID) { 
-    var meetingList = Admin.getMeeting();
+  findUser: function(userID, callback) {
+    /* Function doesn't work currently and can't test it with this setup */
+    console.log('Non-functional');
+    return;
 
-    var connectedMeetings = [];
+    callback = callback || function() {};
 
-    meetingList.forEach(function(meeting) {
-      var users = meeting.connectedUsers();
+    Admin.getMeeting(undefined,
+      // Success function
+      function(data) {
+        console.log('User meeting(s) retreived');
+        var connectedMeetings = [];
 
-      for (var i = 0; i < users.length; i++) {
-        if (users[i].id === userID) {
-          connectedMeetings.push(meeting);
-        }
+        data.meetings.forEach(function(meeting) {
+          var users = meeting.connectedUsers();
+
+          for (var i = 0; i < users.length; i++) {
+            if (users[i].id === userID) {
+              connectedMeetings.push(meeting);
+            }
+          }
+        });
+      },
+      // Failure function
+      function() {
+        console.log('Meetings retrieval failed');
       }
-    });
-
-    return connectedMeetings;
+    );
+  },
+  inviteUsers: function(meetingID, userList) {
+    Admin.inviteUser(meetingID, userList,
+      // Success function
+      function() {
+        console.log('Users ' + userList.toString() + ' invited to meeting ' + meetingID);
+      },
+      // Failure function
+      function() {
+        console.log('Failed to invite users');
+      });
   },
 
   // Admin remove meeting function that attempts to remove the given meeting
@@ -109,12 +126,12 @@ ourMeeting.prototype.admin = {
     Admin.removeMeeting(meetingID,
       // Success function
       function(data) {
-        console.log('Meeting ' + meetingID + 'closed.');
+        console.log('Meeting ' + meetingID + ' closed.');
         console.log(data);
       },
       // Failure function
       function(data) {
-        console.log('Meeting ' + meetingID + 'failed to close. (May not exist)');
+        console.log('Meeting ' + meetingID + ' failed to close. (May not exist)');
         console.log(data);
       }
     );
@@ -146,5 +163,26 @@ ourMeeting.prototype.currentUser = function(username, id){
   };
   return me;
 };
+
+var user = Math.floor(Math.random()*25);
+//register self
+socket.on('connect', function(){
+  socket.emit('user-ready', {username:user});
+});
+socket.on('new-peer', function(){
+  console.log('new peer');
+});
+RTC.start(null, function(err, stream){
+  var elem = document.querySelector('#my-video > video');
+  elem.hidden = false;
+  attachMediaStream(elem, stream);
+  RTC.transport.socket.emit('join',{id:1234});
+});
+
+webrtc.onRemoteStream(function(stream, elem){
+  console.log('Hello, a stream has been added <=============================');
+  document.getElementById('userlist')
+    .appendChild(elem);
+});
 
 module.exports = ourMeeting;

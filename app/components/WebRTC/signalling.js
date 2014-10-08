@@ -5,10 +5,11 @@ function Signaller(){
   });
 
 	return {
-    socket:socket,
-		send: function(evt, data){
-      socket.emit(evt, data);
-		},
+    socket: socket,
+		send: function(){
+      var args = Array.prototype.slice.call(arguments);
+      socket.emit.apply(socket, args);
+    },
 		receive: function(evt, callback){
 			socket.on(evt, callback);
 		},

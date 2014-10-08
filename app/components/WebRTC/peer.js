@@ -27,5 +27,7 @@ config.streamConfig = {
     rtcman.onremotestreamremoval(peer);
   }
 };
+
 rtcman.setRTC(new WebRTC(config));
+
 module.exports = rtcman;
