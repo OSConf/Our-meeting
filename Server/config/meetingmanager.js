@@ -27,7 +27,7 @@ MeetingManager.prototype.addMeeting = function(id){
     }
   };
   //if id is not passed in, will creating a random id that does not already exist
-  if(id===undefined){
+  if(id === undefined || id === null){
     id = randomize(meetings);
   }
   //if id that is passed in already exist, will error
@@ -59,15 +59,15 @@ MeetingManager.prototype.removeMeeting = function(id){
     this.alertInvite(meetingUsers);
     return id;
   } else {
-    throw Error("Meeting does not exist");
+    throw Error('Meeting does not exist');
   }
 };
 
 //ability to get all meetings or just one specific meeting
 MeetingManager.prototype.getMeeting = function(id){
   //if id is not passed in, return all meetings
-  if(id===undefined){
-    var meetings = Object.keys(this.meetings);
+  if(id === undefined || id === null){
+    var meetings = this.meetings;
     return { meetings: meetings };
   } else {
     //if meeting does not exist, throw error
@@ -100,12 +100,12 @@ MeetingManager.prototype.addUser = function(username, socket){
 //ability to get all users or just one specific user
 MeetingManager.prototype.getUser = function(username){
   //if username is not passed in, return all users
-  if(username===undefined){
+  if(username === undefined || username === null){
     return Object.keys(this.users);
   } else {
     //if username does not exist, throw error
     if(this.users[username] === undefined){
-      throw Error("User not found");
+      throw Error('User not found');
     //else, return the socket reference for the username
     } else {
       return this.users[username];
@@ -115,7 +115,7 @@ MeetingManager.prototype.getUser = function(username){
 
 MeetingManager.prototype.getBySocketId = function(id){
   console.log(this.socketIds);
-  if(id === undefined){
+  if(id === undefined || id === null){
     return Object.keys(this.socketIds);
   } else {
     if(this.socketIds[id] === undefined){
@@ -129,7 +129,7 @@ MeetingManager.prototype.getBySocketId = function(id){
 //takes in meeting and an array of users  ex. usernames = ["john", "tom"]
 MeetingManager.prototype.addUserToMeeting = function(meetingID, usernames){
   this.meetings[meetingID].meetInvitees = _.union(this.meetings[meetingID].meetInvitees, usernames);
-
+  
   var that = this.invitees;
   _.each(usernames, function(user){
     var curUserRoom = that[user] || [];

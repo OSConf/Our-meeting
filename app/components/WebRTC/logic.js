@@ -1,28 +1,4 @@
 var client = io({url:'http://localhost'});
-var webrtc = require('./peer.js');
-var rtc = webrtc.RTC();
-var signaller = rtc.signaller;
-var socket = rtc.transport.socket;
+var ourmeeting = require('../../api/front-end.js');
 
-var user = Math.floor(Math.random()*25);
-//register self
-socket.on('connect', function(){
-  socket.emit('user-ready', {username:user});
-});
-socket.on('new-peer', function(){
-  console.log('new peer');
-});
-rtc.start(null, function(err, stream){
-  var elem = document.querySelector('#my-video > video');
-  elem.hidden = false;
-  attachMediaStream(elem, stream);
-  rtc.transport.socket.emit('join',{id:1234});
-});
-
-webrtc.onRemoteStream(function(stream, elem){
-  console.log('Hello, a stream has been added <=============================');
-  document.getElementById('userlist')
-    .appendChild(elem);
-});
-
-module.exports = webrtc;
+module.exports = ourmeeting;

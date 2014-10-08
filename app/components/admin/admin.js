@@ -55,7 +55,7 @@ function Admin(signaller){
     //emits 'invite-user', passing in meetingID and an array of users to be invited
     signaller.send('invite-user', meetingID, usernames);
     signaller.on('invite-user-success', function(){
-      onReply(sucess, 'invite-user');
+      onReply(success, 'invite-user');
     });
     signaller.on('invite-user-error', function(){
       onReply(failure, 'invite-user');
@@ -79,3 +79,5 @@ function Admin(signaller){
 
   return admin;
 }
+
+module.exports = Admin;
