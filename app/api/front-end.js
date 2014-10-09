@@ -37,26 +37,19 @@ var Meeting = function(meetingID){
   return meeting;
 };
 
-var ourMeeting = function(options) {
+var ourMeeting = function() {
   /* Statics */
-  this.whiteboardNode = options.whiteboard || null;
-};
-
-ourMeeting.prototype.whiteboard = {
-  insert: function(node) {
-    this.whiteboardNode.appendChild(node);
-  }
 };
 
 ourMeeting.prototype.admin = {
-  createMeeting: function(userList, callback) {
-    callback = callback || function() {};
+  createMeeting: function(userList) {
+    //callback = callback || function() {};
 
     Admin.addMeeting(undefined,
       // Success function
       function(data) {
         console.log('Meeting created with ID ' + data);
-        callback(data, userList);
+        ourMeeting.prototype.admin.inviteUsers(data, userList);
       },
       // Failure function
       function() {
@@ -85,6 +78,7 @@ ourMeeting.prototype.admin = {
     console.log('Non-functional');
     return;
 
+    /*
     callback = callback || function() {};
 
     Admin.getMeeting(undefined,
@@ -108,6 +102,7 @@ ourMeeting.prototype.admin = {
         console.log('Meetings retrieval failed');
       }
     );
+    */
   },
   inviteUsers: function(meetingID, userList) {
     Admin.inviteUser(meetingID, userList,
@@ -117,7 +112,7 @@ ourMeeting.prototype.admin = {
       },
       // Failure function
       function() {
-        console.log('Failed to invite users');
+        console.log('Failed to invite users (maybe users weren\'t added)');
       });
   },
 
@@ -130,15 +125,14 @@ ourMeeting.prototype.admin = {
         console.log(data);
       },
       // Failure function
-      function(data) {
+      function() {
         console.log('Meeting ' + meetingID + ' failed to close. (May not exist)');
-        console.log(data);
       }
     );
   }
 };
 
-ourMeeting.prototype.currentUser = function(username, id){
+ourMeeting.prototype.currentUser = function(username, id){ // this will be preferably used with some global variable on bookstrap
   var me = new User(username, id);
   var self = this;
   //should *always* listen for 'inviteList' to get list of rooms
@@ -149,6 +143,9 @@ ourMeeting.prototype.currentUser = function(username, id){
   //get method which create a users in this scope instansiate new CurrentUsers, occurs once
   me.joinMeeting = function(meetingID){
     RTC.start(null, function(err, streams){
+      var elem = document.querySelector('#my-video > video');
+      elem.hidden = false;
+      attachMediaStream(elem, stream);
       me.streams = streams;
       signaller.send('join', {id: meetingID});
     });
@@ -161,6 +158,11 @@ ourMeeting.prototype.currentUser = function(username, id){
   me.getStreams = function(){
     return this.streams;
   };
+  me.socket = signaller;
+
+  // doesn't work currently
+  Admin.addUser(me.name, me.socket);
+
   return me;
 };
 

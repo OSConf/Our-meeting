@@ -97,6 +97,16 @@ module.exports = function(server){
       }
     });
 
+    //when client emits add-user
+    socket.on('add-user', function(username, socket){
+      try {
+        //it will add all users or specific user's referenced socket
+        socket.emit('add-user-success', manager.addUser(username, socket) );
+      } catch(e) {
+        socket.emit('add-user-error', e.message);
+      }
+    });
+
     //when a client emits this, they can add users to a meeting
     //takes in meetingID and usernames( ex. ["john", "sally"] )
     socket.on('invite-user', function(meetingID, usernames){
@@ -106,8 +116,7 @@ module.exports = function(server){
         //alert the those who are invited
         manager.alertInvite(usernames);
         socket.emit('invite-user-success');
-      } catch(e) {
-        console.log(e);
+      } catch(e) {console.log(e);
         socket.emit('invite-user-error', e.message);
       }
     });

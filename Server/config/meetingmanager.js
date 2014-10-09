@@ -94,7 +94,7 @@ MeetingManager.prototype.getMeetingList = function(meetingID){
 //ability to add a user with a reference to the socket
 MeetingManager.prototype.addUser = function(username, socket){
   this.users[username] = socket;
-  this.socketIds[socket.id] = username;
+  this.socketIds[socket.ids] = username;
 };
 
 //ability to get all users or just one specific user
