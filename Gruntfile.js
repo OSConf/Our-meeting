@@ -119,7 +119,7 @@ module.exports = function(grunt){
 
   grunt.registerTask('test', ['jshint', /*'mochaTest',*/ 'watchify:dist', 'watch' ]);
   //Concurent will us watchify:example
-  grunt.registerTask('serve', ['concurrent']);
-  grunt.registerTask('build', ['test', 'uglify']);
+  grunt.registerTask('serve', ['build','concurrent']);
+  grunt.registerTask('build', ['watchify', 'uglify']);
   grunt.registerTask('noapi', ['watchify:noapi']);
 };
