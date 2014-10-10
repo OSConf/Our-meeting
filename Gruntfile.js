@@ -59,7 +59,7 @@ module.exports = function(grunt){
 
     concurrent: {
       dev:{
-        tasks:['nodemon', 'node-inspector', 'watch', 'watchify:example'],
+        tasks:['nodemon', 'node-inspector', 'watchify', 'watch'],
         options:{
           logConcurrentOutput: true
         }
@@ -103,6 +103,24 @@ module.exports = function(grunt){
         src:'./app/components/WebRTC/peer.js',
         dest: 'dist/noapi.bundle.js'
       }
+    },
+
+    copy: {
+      main:{
+        files:[
+          {
+            expand:true, 
+            src:[
+              'app/index.html', 
+              'app/adapter.js', 
+              'app/components/custom/**'
+            ],
+            flatten:true,
+            filter:'isFile',
+            dest:'dist/'
+          }
+        ]
+      }
     }
 	});
 
@@ -116,10 +134,11 @@ module.exports = function(grunt){
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-watchify');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.registerTask('test', ['jshint', /*'mochaTest',*/ 'watchify:dist', 'watch' ]);
   //Concurent will us watchify:example
-  grunt.registerTask('serve', ['concurrent']);
-  grunt.registerTask('build', ['test', 'uglify']);
+  grunt.registerTask('serve', ['build','concurrent']);
+  grunt.registerTask('build', ['watchify', 'copy', 'uglify']);
   grunt.registerTask('noapi', ['watchify:noapi']);
 };

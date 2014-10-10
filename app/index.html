@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
+    <link rel="stylesheet" type="text/css" href="/bscript-styles.css">
+    <title>OurMeeting</title>
+  </head>
+  <body>
+  <div class="meeting" hidden>
+    <div id="whiteboard"></div>
+    <div id="userlist">
+      <div id="my-video">
+        <video autoplay muted hidden></video>
+      </div>
+    </div>
+  </div>
+  <div class="info">
+  </div>
+  <script src="adapter.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="ourmeeting.api.js"></script>
+  <script src="bscript.js"></script>
+  </body>
+</html>
