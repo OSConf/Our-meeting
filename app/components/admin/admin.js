@@ -76,7 +76,7 @@ function Admin(signaller){
       onReply(failure, 'get-user', data);
     });
   };
-
+  
   return admin;
 }
 
