@@ -1,0 +1,59 @@
+html, body { 
+  height: 100%;
+  margin: 0;
+}
+
+.meeting {
+  position: relative;
+  height: 100%;
+}
+
+#whiteboard {
+  padding-top: 3px;
+  display: inline-block;
+  background-color: #111;
+  width: 100%;
+  /*height: 80%;*/
+}
+
+#whiteboard video {
+  margin: 0 auto;
+  display: block;
+}
+
+#userlist video {
+  height: 125px;
+  border: 1px solid #00FF00;
+  margin: 3px;
+}
+
+.user-div {
+  height: 125px;
+  width: 167px;
+  margin: 3px;
+  border: 1px solid darkgrey;
+  display: inline-block;
+  text-align: center;
+  background-color: #111;
+  color: white;
+  font-size: 1em;
+}
+
+#userlist {
+  position: absolute;
+  bottom: 0;
+  display: inline-block;
+  
+  padding-top: 3px;
+}
+
+#my-video {
+  display: inline-block;
+}
+
+#my-video video {
+  border: 1px solid red;
+}
+.menu {
+  margin: 10px 10px;
+}

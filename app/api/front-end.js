@@ -115,7 +115,7 @@ ourMeeting.prototype.admin = {
   }
 };
 
-ourMeeting.prototype.currentUser = function(username, id){ // this will be preferably used with some global variable on bookstrap
+ourMeeting.prototype.currentUser = function(username, id){ 
   var me = new User(username, id);
   var self = this;
   //should *always* listen for 'inviteList' to get list of rooms
