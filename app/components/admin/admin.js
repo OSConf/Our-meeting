@@ -76,17 +76,7 @@ function Admin(signaller){
       onReply(failure, 'get-user', data);
     });
   };
-
-  admin.addUser = function(username, socket, success, failure) {
-    //emits 'add-user', passing in a username and socket to store info server side
-    signaller.send('add-user', username, socket);
-    signaller.on('add-user-success', function(data){
-      onReply(sucess, 'add-user', data);
-    });
-    signaller.on('add-user-error', function(data){
-      onReply(failure, 'add-user', data);
-    });
-  };
+  
   return admin;
 }
 

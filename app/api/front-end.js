@@ -74,35 +74,18 @@ ourMeeting.prototype.admin = {
     );
   },
   findUser: function(userID, callback) {
-    /* Function doesn't work currently and can't test it with this setup */
-    console.log('Non-functional');
-    return;
 
-    /*
-    callback = callback || function() {};
-
-    Admin.getMeeting(undefined,
+    Admin.getUser(userID,
       // Success function
       function(data) {
-        console.log('User meeting(s) retreived');
-        var connectedMeetings = [];
-
-        data.meetings.forEach(function(meeting) {
-          var users = meeting.connectedUsers();
-
-          for (var i = 0; i < users.length; i++) {
-            if (users[i].id === userID) {
-              connectedMeetings.push(meeting);
-            }
-          }
-        });
+        console.log('User(s) info retrieved');
+        callback(data);
       },
       // Failure function
       function() {
-        console.log('Meetings retrieval failed');
+        console.log('Failed to get user data');
       }
     );
-    */
   },
   inviteUsers: function(meetingID, userList) {
     Admin.inviteUser(meetingID, userList,
@@ -112,7 +95,7 @@ ourMeeting.prototype.admin = {
       },
       // Failure function
       function() {
-        console.log('Failed to invite users (maybe users weren\'t added)');
+        console.log('Failed to invite users');
       });
   },
 
@@ -158,10 +141,6 @@ ourMeeting.prototype.currentUser = function(username, id){ // this will be prefe
   me.getStreams = function(){
     return this.streams;
   };
-  me.socket = signaller;
-
-  // doesn't work currently
-  Admin.addUser(me.name, me.socket);
 
   return me;
 };

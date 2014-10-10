@@ -67,7 +67,7 @@ MeetingManager.prototype.removeMeeting = function(id){
 MeetingManager.prototype.getMeeting = function(id){
   //if id is not passed in, return all meetings
   if(id === undefined || id === null){
-    var meetings = this.meetings;
+    var meetings = Object.keys(this.meetings);
     return { meetings: meetings };
   } else {
     //if meeting does not exist, throw error
@@ -94,7 +94,7 @@ MeetingManager.prototype.getMeetingList = function(meetingID){
 //ability to add a user with a reference to the socket
 MeetingManager.prototype.addUser = function(username, socket){
   this.users[username] = socket;
-  this.socketIds[socket.ids] = username;
+  this.socketIds[socket.id] = username;
 };
 
 //ability to get all users or just one specific user
