@@ -59,7 +59,7 @@ module.exports = function(grunt){
 
     concurrent: {
       dev:{
-        tasks:['nodemon', 'node-inspector', 'watch', 'watchify:example'],
+        tasks:['nodemon', 'node-inspector', 'watchify', 'watch'],
         options:{
           logConcurrentOutput: true
         }
@@ -139,6 +139,6 @@ module.exports = function(grunt){
   grunt.registerTask('test', ['jshint', /*'mochaTest',*/ 'watchify:dist', 'watch' ]);
   //Concurent will us watchify:example
   grunt.registerTask('serve', ['build','concurrent']);
-  grunt.registerTask('build', ['watchify', 'uglify']);
+  grunt.registerTask('build', ['watchify', 'copy', 'uglify']);
   grunt.registerTask('noapi', ['watchify:noapi']);
 };
