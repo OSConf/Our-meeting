@@ -103,6 +103,24 @@ module.exports = function(grunt){
         src:'./app/components/WebRTC/peer.js',
         dest: 'dist/noapi.bundle.js'
       }
+    },
+
+    copy: {
+      main:{
+        files:[
+          {
+            expand:true, 
+            src:[
+              'app/index.html', 
+              'app/adapter.js', 
+              'app/components/custom/**'
+            ],
+            flatten:true,
+            filter:'isFile',
+            dest:'dist/'
+          }
+        ]
+      }
     }
 	});
 
@@ -116,6 +134,7 @@ module.exports = function(grunt){
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-watchify');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.registerTask('test', ['jshint', /*'mochaTest',*/ 'watchify:dist', 'watch' ]);
   //Concurent will us watchify:example
