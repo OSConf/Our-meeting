@@ -1,5 +1,5 @@
 // Load webrtc here
-var webrtc = require('../components/WebRTC/peer');
+var webrtc = require('om-webrtc');
 var RTC = webrtc.RTC();
 var signaller = RTC.transport;
 var Admin = require('../components/admin/admin.js')(signaller);
@@ -145,25 +145,6 @@ ourMeeting.prototype.currentUser = function(username, id){
   return me;
 };
 
-var user = Math.floor(Math.random()*25);
-//register self
-socket.on('connect', function(){
-  socket.emit('user-ready', {username:user});
-});
-socket.on('new-peer', function(){
-  console.log('new peer');
-});
-RTC.start(null, function(err, stream){
-  var elem = document.querySelector('#my-video > video');
-  elem.hidden = false;
-  attachMediaStream(elem, stream);
-  RTC.transport.socket.emit('join',{id:1234});
-});
+module.exports = function(configs){
 
-webrtc.onRemoteStream(function(stream, elem){
-  console.log('Hello, a stream has been added <=============================');
-  document.getElementById('userlist')
-    .appendChild(elem);
-});
-
-module.exports = ourMeeting;
+};

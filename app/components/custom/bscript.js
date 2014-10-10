@@ -51,3 +51,5 @@
       whiteboard.childNodes[0].style.height = (meeting.clientHeight - 146) + 'px';
     }
   }, false);
+
+  

@@ -70,7 +70,7 @@ module.exports = function(grunt){
       options: {
         mangle: false
       },
-      my_target: {
+      api: {
         files: {
           'dist/omapi.min.js': ['dist/ourmeeting.api.js']
         }
@@ -94,14 +94,6 @@ module.exports = function(grunt){
       dist: {
         src:'./app/api/front-end.js',
         dest:'dist/ourmeeting.api.js'
-      },
-      example: {
-        src: './app/components/WebRTC/logic.js',
-        dest:'./app/components/WebRTC/logic.bundle.js'
-      },
-      noapi: {
-        src:'./app/components/WebRTC/peer.js',
-        dest: 'dist/noapi.bundle.js'
       }
     },
 
@@ -136,9 +128,12 @@ module.exports = function(grunt){
   grunt.loadNpmTasks('grunt-watchify');
   grunt.loadNpmTasks('grunt-contrib-copy');
 
+<<<<<<< HEAD
   grunt.registerTask('test', ['jshint', 'mochaTest' , 'watchify:dist', 'watch' ]);
+=======
+  grunt.registerTask('test', ['jshint', /*'mochaTest',*/ 'watchify', 'watch' ]);
+>>>>>>> 2127856... removed logic.js file, removed its build task
   //Concurent will us watchify:example
   grunt.registerTask('serve', ['build','concurrent']);
   grunt.registerTask('build', ['watchify', 'copy', 'uglify']);
-  grunt.registerTask('noapi', ['watchify:noapi']);
 };
