@@ -51,3 +51,20 @@
       whiteboard.childNodes[0].style.height = (meeting.clientHeight - 146) + 'px';
     }
   }, false);
+
+//var socket = io.connect('/');
+var client;
+var start = function(namespace, info){
+  client = io.connect(namespace);
+  client.send = client.emit.bind(client);
+
+  var om = OurMeeting(client);
+
+  return om.currentUser(info.username);
+};
+
+var user = start('/manager', {username:'Test'});
+
+
+user.joinMeeting('testRoom');
+var meeting = user.meeting;
