@@ -136,7 +136,7 @@ module.exports = function(grunt){
   grunt.loadNpmTasks('grunt-watchify');
   grunt.loadNpmTasks('grunt-contrib-copy');
 
-  grunt.registerTask('test', ['jshint', /*'mochaTest',*/ 'watchify:dist', 'watch' ]);
+  grunt.registerTask('test', ['jshint', 'mochaTest' , 'watchify:dist', 'watch' ]);
   //Concurent will us watchify:example
   grunt.registerTask('serve', ['build','concurrent']);
   grunt.registerTask('build', ['watchify', 'copy', 'uglify']);
