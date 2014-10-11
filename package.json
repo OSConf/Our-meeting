@@ -23,6 +23,7 @@
     "express": "^4.9.3",
     "lodash": "^2.4.1",
     "om-webrtc": ">=0.0.2",
+    "should": "^4.0.4",
     "socket.io": "^1.1.0"
   },
   "devDependencies": {
