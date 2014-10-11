@@ -6,6 +6,39 @@ html, body {
 .meeting {
   position: relative;
   height: 100%;
+  width: calc(100% - 200px);
+  float: left;
+  -webkit-animation: meetingOut 0.5s;
+  -moz-animation:    meetingOut 0.5s;
+  -o-animation:      meetingOut 0.5s;
+  animation:         meetingOut 0.5s;
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-fill-mode:    forwards;
+  -o-animation-fill-mode:      forwards;
+  animation-fill-mode:         forwards;
+  -webkit-animation-direction: reverse;
+  -moz-animation-direction:    reverse;
+  -o-animation-direction:      reverse;
+  animation-direction:         reverse;
+  -webkit-animation-timing-function: linear;
+  -moz-animation-timing-function:    linear;
+  -o-animation-timing-function:      linear;
+  animation-timing-function:         linear;
+}
+
+.slide {
+  -webkit-animation: meetingIn 1.5s;
+  -moz-animation:    meetingIn 1.5s;
+  -o-animation:      meetingIn 1.5s;
+  animation:         meetingIn 1.5s;
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-fill-mode:    forwards;
+  -o-animation-fill-mode:      forwards;
+  animation-fill-mode:         forwards;
+  -webkit-animation-timing-function: linear;
+  -moz-animation-timing-function:    linear;
+  -o-animation-timing-function:      linear;
+  animation-timing-function:         linear;
 }
 
 #whiteboard {
@@ -19,6 +52,8 @@ html, body {
 #whiteboard video {
   margin: 0 auto;
   display: block;
+  width: 100%;
+  height: 100wh;
 }
 
 #userlist video {
@@ -42,8 +77,8 @@ html, body {
 #userlist {
   position: absolute;
   bottom: 0;
+  width: 100%;
   display: inline-block;
-  
   padding-top: 3px;
 }
 
@@ -56,4 +91,111 @@ html, body {
 }
 .menu {
   margin: 10px 10px;
+}
+
+#invites {
+  position: relative;
+  height: 100%;
+  width: 200px;
+  float: left;
+  background: grey;
+  -webkit-animation: slideOut 1s;
+  -moz-animation:    slideOut 1s;
+  -o-animation:      slideOut 1s;
+  animation:         slideOut 1s;
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-fill-mode:    forwards;
+  -o-animation-fill-mode:      forwards;
+  animation-fill-mode:         forwards;
+  -webkit-animation-direction: reverse;
+  -moz-animation-direction:    reverse;
+  -o-animation-direction:      reverse;
+  animation-direction:         reverse;
+  -webkit-animation-timing-function: linear;
+  -moz-animation-timing-function:    linear;
+  -o-animation-timing-function:      linear;
+  animation-timing-function:         linear;
+}
+
+#invites.hidden {
+  -webkit-animation: slideIn 1s;
+  -moz-animation:    slideIn 1s;
+  -o-animation:      slideIn 1s;
+  animation:         slideIn 1s;
+  -webkit-animation-fill-mode: forwards;
+  -moz-animation-fill-mode:    forwards;
+  -o-animation-fill-mode:      forwards;
+  animation-fill-mode:         forwards;
+  -webkit-animation-timing-function: linear;
+  -moz-animation-timing-function:    linear;
+  -o-animation-timing-function:      linear;
+  animation-timing-function:         linear;
+}
+
+@-webkit-keyframes slideIn {
+  0%   { left: 0px; }
+  100% { left: -200px; }
+}
+@-moz-keyframes slideIn {
+  0%   { left: 0px; }
+  100% { left: -200px; }
+}
+@-o-keyframes slideIn {
+  0%   { left: 0px; }
+  100% { left: -200px; }
+}
+@keyframes slideIn {
+  0%   { left: 0px; }
+  100% { left: -200px; }
+}
+
+@-webkit-keyframes slideOut {
+  0%   { left: 0px; }
+  100% { left: -200px; }
+}
+@-moz-keyframes slideOut {
+  0%   { left: 0px; }
+  100% { left: -200px; }
+}
+@-o-keyframes slideOut {
+  0%   { left: 0px; }
+  100% { left: -200px; }
+}
+@keyframes slideOut {
+  0%   { left: 0px; }
+  100% { left: -200px; }
+}
+
+@-webkit-keyframes meetingIn {
+  0%   { width: calc(100% - 200px); }
+  100% { width: 100%; }
+}
+@-moz-keyframes meetingIn {
+  0%   { width: calc(100% - 200px); }
+  100% { width: 100%; }
+}
+@-o-keyframes meetingIn {
+  0%   { width: calc(100% - 200px); }
+  100% { width: 100%; }
+}
+@keyframes meetingIn {
+  0%   { width: calc(100% - 200px); }
+  100% { width: 100%; }
+}
+
+@-webkit-keyframes meetingOut {
+  0%   { width: calc(100% - 200px); }
+  100% { width: 100%; }
+}
+@-moz-keyframes meetingOut {
+  0%   { width: calc(100% - 200px); }
+  100% { width: 100%; }
+}
+@-o-keyframes meetingOut {
+  0%   { width: calc(100% - 200px); }
+  100% { width: 100%; }
+}
+@keyframes meetingOut {
+  0%   { width: calc(100% - 200px); }
+  100% { width: 100%; }
 }
