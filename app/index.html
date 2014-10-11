@@ -7,17 +7,29 @@
   </head>
   <body>
   <div id="invites" class="">
+    <input type="button" value="mute" onclick="toggleMute()">
+    <input type="button" value="video" onclick="toggleVideo()">
     <ul id="users"></ul>
+    <ul id="meeting-list"></ul>
   </div>
-  <div class="meeting"> <!-- add hidden back -->
+  <div class="meeting" hidden> <!-- add hidden back -->
     <div id="whiteboard"></div>
-    <div id="userlist">
+    <div id="user-list">
       <div id="my-video">
         <video autoplay muted hidden></video>
       </div>
     </div>
   </div>
-  <div class="info">
+  <div id="info">
+  <div id="center">
+      <h1 style="margin-bottom: 0;" align="center">Our Meeting</h1>
+      <h3 style="margin-top: 5px;" align="center">Gabar Ewen, Huy Pham, Justin Cruz</h3>
+      <h4 align="center">A Meeting Management API designed to  allow Engineers to quickly develop conferencing solutions using the WebRTC API.</h4>
+      <h5 align="center"><p>This idea was inspired by the constant need of a reliable video conferencing application as an alternative to Google Hangout for Hack Reactor, a Software Engineering School. By relying on current technologies such as WebRTC, Socket.io, Node.js and Express, the team developed an API service to provide a conferencing solution. Further, the service was designed to be easily integrated into any Learning Management System.</p></h5>
+      <img src="http://bit.ly/omdevworkflow" width="70%">
+      <br>
+      <img src="http://bit.ly/omwebrtcflow" width="70%">
+    </div>
   </div>
   <script src="adapter.js"></script>
   <script src="/socket.io/socket.io.js"></script>
