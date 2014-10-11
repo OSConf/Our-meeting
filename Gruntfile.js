@@ -7,7 +7,7 @@ module.exports = function(grunt){
 
 		watch: {
       files: ['<%= jshint.files %>'],
-      tasks: ['jshint', 'copy'],
+      tasks: ['jshint', 'copy', 'test'],
       server: {
         files: ['.rebooted'],
         options: {
@@ -128,11 +128,9 @@ module.exports = function(grunt){
   grunt.loadNpmTasks('grunt-watchify');
   grunt.loadNpmTasks('grunt-contrib-copy');
 
-<<<<<<< HEAD
-  grunt.registerTask('test', ['jshint', 'mochaTest' , 'watchify:dist', 'watch' ]);
-=======
-  grunt.registerTask('test', ['jshint', /*'mochaTest',*/ 'watchify', 'watch' ]);
->>>>>>> 2127856... removed logic.js file, removed its build task
+
+  grunt.registerTask('test', ['jshint', 'mochaTest' , 'watchify', 'watch' ]);
+
   //Concurent will us watchify:example
   grunt.registerTask('serve', ['build','concurrent']);
   grunt.registerTask('build', ['watchify', 'copy', 'uglify']);
