@@ -4,10 +4,10 @@ function Admin(signaller){
   //helper function to take care of turning off success and error listener
   //and taking in either a success or failure callback to process the data
   function onReply(callback, evt, data){
-    if(evt){
-      signaller.off(evt+'-success');
-      signaller.off(evt+'-error');
-    }
+    // if(evt){
+    //   signaller.off(evt+'-success');
+    //   signaller.off(evt+'-error');
+    // }
     if( typeof callback === 'function'){
       callback(data);
     }
