@@ -1,16 +1,19 @@
 // Load webrtc here
-var webrtc = require('om-webrtc');
-var RTC = webrtc.RTC();
-var signaller = RTC.transport;
-var Admin = require('../components/admin/admin.js')(signaller);
-var socket = RTC.transport.socket;
+var WebRTC = require('om-webrtc');
+var AdminFunctions = require('../components/admin/admin.js');
 
-//var Streams = function() {};
+//Set when using new OurMeeting(signaller)
+var signaller;
+var Admin;
+var webrtc = new WebRTC({
+  webrtcConfig: {
+    debug:false
+  }
+});
 
 var User = function(username, id) {
   this.username = username;
   this.id = id;
-  this.streams = null;
 };
 
 var Meeting = function(meetingID){
@@ -33,15 +36,31 @@ var Meeting = function(meetingID){
   meeting.connectedUsers = function(){
     return this.meeting.users;
   };
+  meeting.getUser = function(id){
+    return webrtc.getUser(id);
+  };
+  meeting.getStreams = function(){
+    var streams = {};
+    webrtc.getPeers().forEach(function(peer){
+      streams[peer.id] = peer.streams;
+    });
+    return streams;
+  };
 
   return meeting;
 };
 
-var ourMeeting = function() {
+var OurMeeting = function() {
   /* Statics */
+  this.on = function(evt, cb){
+    webrtc.on(evt, cb);
+  };
+  this.webrtc = function(){
+    return webrtc;
+  };
 };
 
-ourMeeting.prototype.admin = {
+OurMeeting.prototype.admin = {
   createMeeting: function(userList) {
     //callback = callback || function() {};
 
@@ -49,7 +68,7 @@ ourMeeting.prototype.admin = {
       // Success function
       function(data) {
         console.log('Meeting created with ID ' + data);
-        ourMeeting.prototype.admin.inviteUsers(data, userList);
+        OurMeeting.prototype.admin.inviteUsers(data, userList);
       },
       // Failure function
       function() {
@@ -115,7 +134,7 @@ ourMeeting.prototype.admin = {
   }
 };
 
-ourMeeting.prototype.currentUser = function(username, id){ 
+OurMeeting.prototype.currentUser = function(username, id){ 
   var me = new User(username, id);
   var self = this;
   //should *always* listen for 'inviteList' to get list of rooms
@@ -125,11 +144,7 @@ ourMeeting.prototype.currentUser = function(username, id){
   });
   //get method which create a users in this scope instansiate new CurrentUsers, occurs once
   me.joinMeeting = function(meetingID){
-    RTC.start(null, function(err, streams){
-      var elem = document.querySelector('#my-video > video');
-      elem.hidden = false;
-      attachMediaStream(elem, stream);
-      me.streams = streams;
+    webrtc.start(function(err, streams){
       signaller.send('join', {id: meetingID});
     });
     self.meeting = new Meeting(meetingID);
@@ -139,12 +154,14 @@ ourMeeting.prototype.currentUser = function(username, id){
   };
   me.name = me.username || me.id;
   me.getStreams = function(){
-    return this.streams;
+    return webrtc.getMyInfo().stream;
   };
 
   return me;
 };
 
-module.exports = function(configs){
-
+module.exports = function(signallingChannel){
+  signaller = signallingChannel;
+  Admin = new AdminFunctions(signallingChannel);
+  return new OurMeeting();
 };
