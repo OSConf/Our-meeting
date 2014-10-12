@@ -4,6 +4,16 @@ module.exports = function(server){
   var MeetingManger = require('./meetingmanager.js');
   var manager = new MeetingManger();
 
+  //creating our test room
+  manager.addMeeting('test1');
+  manager.addMeeting('test2');
+  manager.addMeeting('test3');
+  manager.addMeeting('test4');
+  manager.addUserToMeeting('test1', ['user1', 'user2', 'user3']);
+  manager.addUserToMeeting('test2', ['user1', 'user2', 'user3']);
+  manager.addUserToMeeting('test3', ['user1', 'user2', 'user3']);
+  manager.addUserToMeeting('test4', ['user1', 'user2', 'user3']);
+
   //on connection...
   io.on('connection', function(socket){
 
@@ -20,14 +30,15 @@ module.exports = function(server){
     //when user join, client will emit "user ready" and send data with username
     socket.on('user-ready', function(data) {
       //adding username property onto the socket
+      console.log('user-ready was emitted from client from ', data.username);
       username = data.username;
       //adding the user to our meeting manager object
       manager.addUser(username, socket);
-
+      managerSpace.emit('updateList', manager.getUser());
       //Check if user was invite to any meetings
       var meetings = manager.checkInvite(username);
       if(meetings.length > 0){
-        socket.emit('invites', meetings);
+        socket.emit('inviteList', meetings);
       }
     });
 
@@ -46,8 +57,9 @@ module.exports = function(server){
       console.log('user disconnected');
       try {
         var username = manager.getBySocketId(socket.id);
-        socket.broadcast.to(socket.myroom)
+        socket.broadcast.to(socket.roomID)
           .emit('peer-disconnect', {id:socket.id});
+          console.log('did', socket.id);
 
         delete manager.users[username];
         delete manager.socketIds[socket.id];
@@ -113,6 +125,7 @@ module.exports = function(server){
     //check's if a user is invited to any meeting
     socket.on('check-invite', function(username){
       try {
+        console.log('check-invite was emitted from client ', username);
         //note: should look at this one again, client will listen for invitelist at all time, no need for success emit?
         socket.emit('inviteList', manager.checkInvite(username) );
         socket.emit('check-invite-success');
@@ -130,9 +143,15 @@ module.exports = function(server){
         //if meeting exist then the client will join the room
 
         /* Currently allowing to join any room name */
-
+        //
+        if(socket.roomID !== undefined){
+          console.log('leaving room ', socket.roomID);
+          socket.leave(socket.roomID);
+          socket.roomID = undefined;
+        }
         //joining the meeting
         socket.join(room.id);
+        socket.roomID = room.id;
         if(meeting){
           //adding user to the active user list for the meeting
           manager.joinMeeting(room.id, socket.id);

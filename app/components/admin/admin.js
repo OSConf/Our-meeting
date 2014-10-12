@@ -4,10 +4,10 @@ function Admin(signaller){
   //helper function to take care of turning off success and error listener
   //and taking in either a success or failure callback to process the data
   function onReply(callback, evt, data){
-    if(evt){
-      signaller.off(evt+'-success');
-      signaller.off(evt+'-error');
-    }
+    // if(evt){
+    //   signaller.off(evt+'-success');
+    //   signaller.off(evt+'-error');
+    // }
     if( typeof callback === 'function'){
       callback(data);
     }
@@ -70,7 +70,7 @@ function Admin(signaller){
     signaller.send('get-user', username);
     //listens for 'user' on return data, data = list of all users or a specific user's socket
     signaller.on('get-user-success', function(data){
-      onReply(sucess, 'get-user', data);
+      onReply(success, 'get-user', data);
     });
     signaller.on('get-user-error', function(data){
       onReply(failure, 'get-user', data);

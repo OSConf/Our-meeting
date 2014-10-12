@@ -23,7 +23,7 @@ var Meeting = function(meetingID){
     if(meetingID === data.id){
       meeting.id = meetingID;
       meeting.invitees = data.meetInvitees;
-      meeting.users = WebRTC.getAllUsers();
+      meeting.users = webrtc.getAllUsers();
     }
   });
 
@@ -55,6 +55,14 @@ var OurMeeting = function() {
   this.on = function(evt, cb){
     webrtc.on(evt, cb);
   };
+
+  //All users available in the subgroup
+  this.users = [];
+
+  Admin.getUser(null, function(users){
+    this.users = users;
+  }); 
+
   this.webrtc = function(){
     return webrtc;
   };
@@ -137,10 +145,12 @@ OurMeeting.prototype.admin = {
 OurMeeting.prototype.currentUser = function(username, id){ 
   var me = new User(username, id);
   var self = this;
+  me.invites = [];
   //should *always* listen for 'inviteList' to get list of rooms
   signaller.on('inviteList', function(data){
+    console.log('Received invites');
     //data = array of meeting names
-    console.log(data);
+    me.invites = data;
   });
   //get method which create a users in this scope instansiate new CurrentUsers, occurs once
   me.joinMeeting = function(meetingID){
