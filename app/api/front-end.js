@@ -69,10 +69,9 @@ var OurMeeting = function() {
 };
 
 OurMeeting.prototype.admin = {
-  createMeeting: function(userList) {
-    //callback = callback || function() {};
+  createMeeting: function(userList, meetingID) {
 
-    Admin.addMeeting(undefined,
+    Admin.addMeeting(meetingID,
       // Success function
       function(data) {
         console.log('Meeting created with ID ' + data);
