@@ -99,8 +99,7 @@ OurMeeting.prototype.admin = {
       }
     );
   },
-  findUser: function(userID, callback) {
-
+  getAllUsers: function(callback, userID) {
     Admin.getUser(userID,
       // Success function
       function(data) {
