@@ -1,22 +1,18 @@
 // Load webrtc here
 var WebRTC = require('om-webrtc');
 var AdminFunctions = require('../components/admin/admin.js');
+var UserClass = require('./User');
 
 //Set when using new OurMeeting(signaller)
 var signaller;
 var Admin;
-var webrtc = new WebRTC({
-  webrtcConfig: {
-    debug:false
-  }
-});
 
 var User = function(username, id) {
   this.username = username;
   this.id = id;
 };
 
-var Meeting = function(meetingID){
+var Meeting = function(meetingID, webrtc){
   var meeting = {};
 
   Admin.getMeeting(meetingID, function(data){
@@ -53,18 +49,20 @@ var Meeting = function(meetingID){
 var OurMeeting = function() {
   /* Statics */
   this.on = function(evt, cb){
-    webrtc.on(evt, cb);
+    this.user.on(evt, cb);
   };
 
   //All users available in the subgroup
   this.users = [];
-
+  this.user = null;
   Admin.getUser(null, function(users){
     this.users = users;
-  }); 
+  });
 
   this.webrtc = function(){
-    return webrtc;
+    if(this.user){
+      return this.user.getWebRTC();
+    }
   };
 };
 
@@ -140,30 +138,25 @@ OurMeeting.prototype.admin = {
   }
 };
 
-OurMeeting.prototype.currentUser = function(username, id){ 
-  var me = new User(username, id);
-  var self = this;
-  me.invites = [];
+OurMeeting.prototype.currentUser = function(username, id, name){
+  var CurrentUser = UserClass('user');
+  var me = new CurrentUser(username, id, name);
+  me.newWebRTC(WebRTC);
   //should *always* listen for 'inviteList' to get list of rooms
   signaller.on('inviteList', function(data){
     console.log('Received invites');
     //data = array of meeting names
     me.invites = data;
   });
-  //get method which create a users in this scope instansiate new CurrentUsers, occurs once
-  me.joinMeeting = function(meetingID){
-    webrtc.start(function(err, streams){
-      signaller.send('join', {id: meetingID});
-    });
-    self.meeting = new Meeting(meetingID);
-  };
-  me.checkInvites = function(){
+
+  //Sets up joinMeeting function with signaller and a way to create new meetings
+  me.joinMeeting(signaller, WebRTC, function(meetingID){
+    return new Meeting(meetingID, me.getWebRTC());
+  });
+
+  me.checkInvites(function(){
     signaller.send('check-invite');
-  };
-  me.name = me.username || me.id;
-  me.getStreams = function(){
-    return webrtc.getMyInfo().stream;
-  };
+  });
 
   return me;
 };

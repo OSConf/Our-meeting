@@ -100,8 +100,8 @@
 
     return om;
   };
-  
-  //Get username 
+
+  //Get username
   var info = (function(){
     return {
       username: prompt('Please enter a username')
@@ -110,17 +110,16 @@
 
 
   ourMeeting = start('/manager', info);
-  signalling(ourMeeting.webrtc());
-  //send user info to server
+    //send user info to server
   client.emit('user-ready', info);
 
   var user = ourMeeting.currentUser(info.username);
   user.el = document.querySelector('#my-video > video');
-
+  signalling(user.getWebRTC());
   //Keep the list of users up to date
   var usersElem = document.getElementById('users');
 
-  var onNewUsers = function(userlist){ 
+  var onNewUsers = function(userlist){
     var users = ourMeeting.users = userlist;
     usersElem.innerHTML = '';
     users.forEach(function(user){
@@ -161,7 +160,8 @@
     elem.addEventListener('click', function(event){
         var room = this.id;
         meeting = joinMeeting(room);
-    });    
+        console.log('click');
+    });
   };
 
   var inviteElem = document.getElementById('meeting-list');
@@ -176,11 +176,11 @@
       onMeetingClick(li);
     });
   });
- 
+
   var muteState = false;
 
   var toggleMute = function(){
-    var controls = ourMeeting.webrtc().streamController;
+    var controls = user.getStreamControls();
     if(controls === undefined){
       return;
     }
@@ -196,7 +196,7 @@
   var videoState = false;
 
   var toggleVideo = function(){
-    var controls = ourMeeting.webrtc().streamController;
+    var controls = user.getStreamControls();
     if(controls === undefined){
       return;
     }
@@ -213,19 +213,19 @@
   //These events help regulate the dom and show video elements
 
   //Local Stream
-  ourMeeting.on('LocalStreamAdded', function(stream){
+  user.on('LocalStreamAdded', function(stream){
     var elem = document.querySelector('#my-video > video');
     attachMediaStream(elem, stream);
     elem.hidden = false;
     user.el = elem;
   });
 
-  ourMeeting.on('LocalStreamStopped', function(){
+  user.on('LocalStreamStopped', function(){
     user.el.remove();
   });
 
   //Remote Stream
-  ourMeeting.on('PeerStreamAdded', function(peer){
+  user.on('PeerStreamAdded', function(peer){
     var elem = peerVideo(peer.id);
     var stream = peer.stream;
     attachMediaStream(elem, stream);
@@ -235,7 +235,7 @@
 //SIGNALLING
 function signalling(webrtc){
   client.on('new-peer', webrtc.newPeer.bind(webrtc.RTC()));
-  
+
   client.on('signal', function(data){
     webrtc.RTC().handlers.sig(data);
   });
