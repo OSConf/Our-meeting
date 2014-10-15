@@ -5,9 +5,14 @@ var User = function(username, id, name){
   this.name = name;
   this.stream = null;
   this.callbacks = [];
+  this.errors = [];
 };
 
 User.prototype.on = function(evt, callback){
+  var item = this.listenOn();
+  if(typeof item === 'object'){
+    item.on(evt, callback);
+  }
   var e = {evt:evt, callback:callback};
   this.callbacks.push(e);
 };
@@ -25,6 +30,9 @@ User.prototype.applyEvents = function(){
 //Implemented in subclasses
 User.prototype.listenOn = function(){};
 
+User.prototype.addError = function(err){
+  this.errors.push(new Error(err));
+};
 /*
   Current user represents the current local user
   the webrtc prop is meant to be reset when joining new meetings
@@ -33,6 +41,7 @@ User.prototype.listenOn = function(){};
 var CurrentUser = function(username, id, name){
   User.call(this, username, id, name);
   this.webrtc = null;
+  this.invites = [];
 };
 
 CurrentUser.prototype = Object.create(User.prototype);
@@ -56,36 +65,68 @@ CurrentUser.prototype.newWebRTC = function(WebRTC){
 };
 
 CurrentUser.prototype.getWebRTC = function(){
-  return this.webrtc || null;
+  return this.webrtc;
 };
 
 CurrentUser.prototype.getStream = function(){
-  this.stream = this.webrtc.getMyInfo().stream;
+  if(this.webrtc !== null && this.webrtc !== null){
+    this.stream = this.webrtc.getMyInfo().stream;
+    return this.stream;
+  } else {
+    this.addError('CurrentUser.getStream: Can\'t get stream without webrtc object');
+  }
 };
 
 CurrentUser.prototype.getStreamControls = function(){
-  if(this.stream){
-    return this.webrtc.streamController;
+  if(this.webrtc !== null && this.webrtc !== null){
+    if(this.stream === null){
+      this.getStream();
+    }
+
+    if(this.stream){
+      return this.webrtc.streamController;
+    } else {
+      this.addError('CurrentUser.getStreamControls: Can\'t get controls when'+
+      'stream not available');
+    }
+  } else {
+    this.addError('CurrentUser.getStreamControls: Can\'t get controls without'+
+    ' webrtc object');
   }
 };
+
 //callback should return a meeting
-CurrentUser.prototype.joinMeeting = function(signaller, meetingID, callback){
-  if(this.streams === null){
-    this.webrtc.start(function(err, streams){
-      if(err){
-        console.log(err);
-      }
-
-      signaller.send('join', {id: meetingID});
-      this.stream = streams;
-    });
+CurrentUser.prototype.joinMeeting = function(signaller, WebRTC, callback){
+  if(typeof callback !== 'function'){
+    this.addError('CurrentUser.joinMeeting: Second argument must be a callback');
   }
-  this.meeting = callback(meetingID);
-  return this.meeting;
+  this.newWebRTC(WebRTC);
+  this.joinMeeting = function(meetingID){
+
+    if(!this.webrtc){
+      this.addError('CurrentUser.joinMeeting: Cannot call joinMeeting without'+
+      ' webrtc object');
+      return;
+    }
+
+    if(this.stream === null){
+      console.log('exec');
+      this.webrtc.start(function(err, streams){
+        if(err){
+          console.log(err);
+        }
+
+        signaller.send('join', {id: meetingID});
+        this.stream = streams;
+      });
+    }
+    this.meeting = callback(null, meetingID);
+    return this.meeting;
+  };
 };
 
-CurrentUser.prototype.checkInvites = function(signaller){
-  signaller.send('check-invites');
+CurrentUser.prototype.checkInvites = function(callback){
+  this.checkInvites = callback;
 };
 
 CurrentUser.prototype.listenOn = function(){
@@ -96,6 +137,9 @@ var AdminUser = function(username, id, name, Admin){
   this.Admin = Admin;
 };
 
+/*
+  Admin user is a subclass of current user
+*/
 AdminUser.prototype = Object.create(CurrentUser.prototype);
 AdminUser.prototype.constructor = AdminUser;
 
@@ -144,6 +188,7 @@ AdminUser.prototype.getAllUsers= function(callback, userID){
     }
   );
 };
+
 AdminUser.prototype.inviteUsers = function(meetingID, userList){
   this.Admin.inviteUser(meetingID, userList,
     // Success function
@@ -156,6 +201,7 @@ AdminUser.prototype.inviteUsers = function(meetingID, userList){
   });
 };
 
+//Other users in the meeting
 var Peers = function(username, id, name){
   User.call(this, username, id, name);
 };
@@ -164,13 +210,28 @@ Peers.prototype = Object.create(User.prototype);
 Peers.prototype.constructor = Peers;
 
 Peers.prototype.setPCInfo = function(webrtc){
+  if(webrtc === undefined || webrtc === null){
+    this.addError('Peers.setPCInfo: Cannot get RTCPeerConnection'+
+    ' without webrtc object');
+
+    return;
+  }
   if(this.id !== undefined && this.id !== null){
     this.pc = webrtc.getUser(this.id);
   }
 };
 Peers.prototype.getStream = function(webrtc){
+  if(webrtc === undefined || webrtc === null){
+    this.addError('Peers.getStream: Cannot get peer stream without'+
+    ' webrtc object');
+
+    return;
+  }
   if(this.id === undefined || this.id === null){
-    return null;
+    this.addError('Peers.getStream: Cannot get peer stream without'+
+    ' id');
+
+    return;
   } else if(this.stream === null || this.stream === undefined){
     this.stream = webrtc.getStream(this.id);
   }
@@ -209,6 +270,5 @@ var users = {
 };
 
 module.exports = function(type){
-  var args = Array.prototype.slice.call(arguments, 1);
-  return new users[type].apply(undefined, args);
+  return users[type];
 };

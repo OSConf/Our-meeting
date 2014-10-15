@@ -2,6 +2,9 @@ module.exports = function(grunt){
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
 		jshint: {
+			options:{
+				expr:true
+			},
 			files: ['app/**/*.js', '!app/**/*.bundle.js', 'server/**/*.js', 'Gruntfile.js'],
 		},
 
@@ -101,10 +104,10 @@ module.exports = function(grunt){
       main:{
         files:[
           {
-            expand:true, 
+            expand:true,
             src:[
-              'app/index.html', 
-              'app/adapter.js', 
+              'app/index.html',
+              'app/adapter.js',
               'app/components/custom/**'
             ],
             flatten:true,
